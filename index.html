@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CID Search System</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+    
+    <link rel="stylesheet" href="style.css">
+
+    <!-- 🟢 মেনুবার এবং টেবিল ফন্ট ফিক্স করার নতুন ডিজাইন (CSS) -->
+    <style>
+        /* মেনুবারের মূল ব্যাকগ্রাউন্ড */
+        .navbar {
+            overflow: hidden;
+            background-color: #09a3e0;
+            font-family: Arial, sans-serif;
+            border-radius: 4px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+        }
+
+        /* মেনুবারের ভেতরের লিংকগুলোর স্টাইল */
+        .navbar a {
+            float: left;
+            font-size: 16px;
+            color: white;
+            text-align: center;
+            padding: 14px 16px;
+            text-decoration: none;
+            transition: 0.3s;
+        }
+
+        /* ড্রপডাউন কন্টেইনার */
+        .dropdown {
+            float: left;
+            overflow: hidden;
+        }
+
+        /* ড্রপডাউন বাটন */
+        .dropdown .dropbtn {
+            font-size: 16px; 
+            border: none;
+            outline: none;
+            color: white;
+            padding: 14px 16px;
+            background-color: inherit;
+            font-family: inherit;
+            margin: 0;
+            cursor: pointer;
+            transition: 0.3s;
+        }
+
+        /* মাউস নিলে বাটনের কালার পরিবর্তন */
+        .navbar a:hover, .dropdown:hover .dropbtn {
+            background-color: #009688;
+        }
+
+        /* ড্রপডাউন বক্স */
+        .dropdown-content {
+            display: none;
+            position: absolute;
+            background-color: #f9f9f9;
+            min-width: 180px;
+            box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.2);
+            z-index: 999;
+            border-radius: 0 0 4px 4px;
+        }
+
+        .dropdown-content a {
+            float: none;
+            color: black;
+            padding: 12px 16px;
+            text-decoration: none;
+            display: block;
+            text-align: left;
+        }
+
+        .dropdown-content a:hover {
+            background-color: #ddd;
+            color: black;
+        }
+
+        .dropdown:hover .dropdown-content {
+            display: block;
+        }
+
+        /* 🔴 টেবিলের ফন্ট, সাইজ এবং আগের লুক ফিরিয়ে আনার কোড */
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-family: Arial, sans-serif; /* আগের মতো ফন্ট */
+            font-size: 13px; /* ফন্ট সাইজ ঠিক করার জন্য */
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+
+        table th {
+            font-weight: bold;
+            padding: 10px 8px;
+            border: 1px solid #454d55;
+            font-size: 13px;
+        }
+
+        table td {
+            padding: 8px 10px; /* লেখাগুলো যাতে গায়ে গায়ে লেগে না যায় */
+            border: 1px solid #dee2e6; /* হালকা সুন্দর বর্ডার */
+            vertical-align: middle;
+            white-space: nowrap; /* লেখাগুলো ভেঙে নিচে নামবে না */
+        }
+
+        /* কলামের উইডথ বা চওড়া কিছুটা ফিক্সড করা যাতে ভেঙে ছোট না দেখায় */
+        table th, table td {
+            min-width: 70px; 
+        }
+
+        /* বিশেষ বড় কলাম যেমন CID Name ও SID Name এর জন্য একটু বেশি জায়গা */
+        table th:nth-child(3), table td:nth-child(3),
+        table th:nth-child(6), table td:nth-child(6) {
+            min-width: 180px; 
+            white-space: normal; /* শুধু এজেন্সির নাম বড় হলে ভাঙতে পারবে */
+        }
+    </style>
+</head>
+<body>
+
+    <div class="navbar">
+        <a href="#home">Home</a>
+        <div class="dropdown">
+            <button class="dropbtn">Report 
+                <i class="fa fa-caret-down"></i>
+            </button>
+            <div class="dropdown-content">
+                <a href="#mlot-search-section" onclick="showSearchSection()">Mlot >1000 Search</a>
+            </div>
+        </div>
+    </div>
+
+    <div id="mlot-search-section" class="container" style="display: none; padding: 10px;"> 
+        
+        <h2>CID Full Details Search System</h2>
+        
+        <!-- সার্চ বক্স এরিয়া (লেখা ও বাটন বড় করা হয়েছে) -->
+        <div class="search-box" style="margin-bottom: 20px; display: flex; align-items: center; flex-wrap: wrap; gap: 10px;">
+            <!-- লেবেল বড় করা হলো -->
+            <label for="inputId" style="font-weight: bold; font-size: 20px; font-family: Arial, sans-serif;">Enter MLOT ID : </label>
+            
+            <!-- ইনপুট বক্সের ভেতরের লেখা ও সাইজ বড় করা হলো -->
+            <input type="text" id="inputId" placeholder="Type ID and search..." style="font-size: 18px; padding: 8px 12px; width: 250px; border: 1px solid #ccc; border-radius: 4px; font-family: Arial, sans-serif;">
+            
+            <!-- সার্চ বাটনের লেখা ও সাইজ বড় করা হলো -->
+            <button onclick="searchCID()" id="searchBtn" style="background-color: #009688; color: white; padding: 8px 20px; border: none; border-radius: 4px; cursor: pointer; font-weight: bold; font-size: 18px; font-family: Arial, sans-serif; transition: 0.3s;">Search</button>
+            
+            <!-- কাউন্টার ও ডেট দেখানোর জায়গা -->
+            <div id="totalCounter" style="display: inline-block;"></div>
+        </div>
+
+        <div id="loading" style="display: none; color: blue; font-weight: bold; margin: 10px 0;">Data load হচ্ছে, দয়া করে অপেক্ষা করুন...</div>
+        <div id="noResult" style="display: none; color: red; font-weight: bold; margin: 10px 0;">কোনো তথ্য পাওয়া যায়নি!</div>
+
+        <div style="overflow-x: auto;">
+            <table border="1" style="width: 100%; border-collapse: collapse; text-align: left;">
+                <thead id="tableHeader">
+                    </thead>
+                <tbody id="tableBody">
+                    <tr>
+                        <td colspan="20" style="text-align: center; color: #555; padding: 20px;">Enter an ID and click Search to see details.</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
