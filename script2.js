@@ -33,8 +33,16 @@ function preloadBankData() {
     fetch(PAY_ALOTED_URL).then(res => res.text()).then(csv => { cachedPayData = csv.split(/\r?\n/); }).catch(e => console.log("Preload Error"));
 }
 
+// ডেট ফরম্যাট করার হেল্পার ফাংশন (YYYY-MM-DD থেকে DD-MM-YYYY)
+function formatDateToDMY(rawDateStr) {
+    if (!rawDateStr || rawDateStr === "-") return "-";
+    let cleanDate = rawDateStr.includes("T") ? rawDateStr.split("T")[0] : rawDateStr;
+    let parts = cleanDate.split("-");
+    return (parts.length === 3 && parts[0].length === 4) ? `${parts[2]}-${parts[1]}-${parts[0]}` : cleanDate;
+}
+
 // ====================================================
-// 📊 ২. MLOT SEARCH (FAST JSONP CLEANUP)
+// 📊 ২. MLOT SEARCH (FIXED DATE & FAST)
 // ====================================================
 function searchCID() {
     const searchId = document.getElementById("inputId").value.trim();
@@ -71,9 +79,18 @@ function searchCID() {
         });
         tableHeader.innerHTML = headerHtml + "</tr>";
 
-        let colSums = new Array(data.mainHeader.length).fill(0), grandTotalDespatchGt1000 = 0;
+        let colSums = new Array(data.mainHeader.length).fill(0);
+        let grandTotalDespatchGt1000 = 0;
+        let lastCreateDate = "-";
+        
+        // "CreateDt" কলামের ইনডেক্স খুঁজে বের করা
+        let createDtIndex = data.mainHeader.findIndex(col => String(col).toLowerCase().trim() === "createdt");
 
         data.rows.forEach(row => {
+            // ডেট সংরক্ষন করা
+            if (createDtIndex !== -1 && row[createDtIndex]) {
+                lastCreateDate = String(row[createDtIndex]);
+            }
             row.forEach((cell, j) => {
                 if (j >= 6) {
                     let colName = String(data.mainHeader[j]).toLowerCase().trim();
@@ -85,8 +102,12 @@ function searchCID() {
             });
         });
 
+        // 🛠️ এখানে সবুজ ডেট ব্যাজ ফিরিয়ে আনা হয়েছে
         if (totalCounter) {
-            totalCounter.innerHTML = `<span class="badge-orange">Total Despatch >1000: ${grandTotalDespatchGt1000} বার</span>`;
+            totalCounter.innerHTML = `
+                <span class="badge-orange">Total Despatch >1000: ${grandTotalDespatchGt1000} বার</span>
+                <span class="badge-green">Date: ${formatDateToDMY(lastCreateDate)}</span>
+            `;
         }
 
         let sumHtml = "<tr style='background-color: #ccffcc; font-weight: bold;'>";
@@ -100,7 +121,14 @@ function searchCID() {
         let rowsHtml = "";
         data.rows.forEach(row => {
             rowsHtml += "<tr>";
-            row.forEach(cell => { rowsHtml += `<td>${(cell !== undefined && cell !== "") ? cell : "-"}</td>`; });
+            row.forEach((cell, cellIndex) => { 
+                let displayValue = (cell !== undefined && cell !== "") ? cell : "-";
+                // টেবিলের ভেতরের CreateDt কলামকেও সুন্দর ফরম্যাটে দেখানো
+                if (cellIndex === createDtIndex) {
+                    displayValue = formatDateToDMY(String(displayValue));
+                }
+                rowsHtml += `<td>${displayValue}</td>`; 
+            });
             rowsHtml += "</tr>";
         });
         
@@ -108,7 +136,9 @@ function searchCID() {
         tableBody.innerHTML = sumHtml + "</tr>" + rowsHtml;
         
         // ক্লিনআপ
-        document.getElementById("jsonpScript").remove();
+        if (document.getElementById("jsonpScript")) {
+            document.getElementById("jsonpScript").remove();
+        }
     };
 
     const script = document.createElement("script");
