@@ -1,20 +1,97 @@
 // ====================================================
-// 🟢 ১. কনস্ট্যান্ট ও ইউআরএল (URLs) কনফিগারেশন
+// 🔑 ১. লগইন ইউজার লিস্ট (User ID & Password Control)
+// ====================================================
+const ALLOWED_USERS = {
+    "admin": "12345",      // User ID: admin , Password: pass123
+    "dilip": "cricket77",    // User ID: dilip , Password: cricket77
+    "sourav": "123456",
+    "subir": "123456",    // User ID: akasa , Password: survey2026
+};
+
+// পেজ লোড হবার সাথে সাথে লগইন স্ট্যাটাস চেক করবে
+document.addEventListener("DOMContentLoaded", function() {
+    checkLoginStatus();
+});
+
+function checkLoginStatus() {
+    const isLoggedIn = sessionStorage.getItem("isLoggedIn");
+    if (isLoggedIn === "true") {
+        showDashboard();
+    } else {
+        showLoginScreen();
+    }
+}
+
+function handleLogin() {
+    const uName = document.getElementById("username").value.trim();
+    const pWord = document.getElementById("password").value.trim();
+    const errorMsg = document.getElementById("login-error");
+
+    // ইউজারনেম এবং পাসওয়ার্ড ম্যাচিং লজিক
+    if (ALLOWED_USERS[uName] && ALLOWED_USERS[uName] === pWord) {
+        if (errorMsg) errorMsg.style.display = "none";
+        sessionStorage.setItem("isLoggedIn", "true");
+        showDashboard();
+    } else {
+        if (errorMsg) errorMsg.style.display = "block";
+    }
+}
+
+function handleLogout() {
+    sessionStorage.removeItem("isLoggedIn");
+    
+    // ইনপুট ফিল্ড ক্লিয়ার করা
+    const uInput = document.getElementById("username");
+    const pInput = document.getElementById("password");
+    if (uInput) uInput.value = "";
+    if (pInput) pInput.value = "";
+    
+    showLoginScreen();
+}
+
+function showLoginScreen() {
+    const loginScreen = document.getElementById("login-screen");
+    const mainDashboard = document.getElementById("main-dashboard");
+    
+    if (loginScreen) loginScreen.style.display = "flex";
+    if (mainDashboard) mainDashboard.style.display = "none";
+    
+    stopSnakeGame();
+}
+
+function showDashboard() {
+    const loginScreen = document.getElementById("login-screen");
+    const mainDashboard = document.getElementById("main-dashboard");
+    
+    if (loginScreen) loginScreen.style.display = "none";
+    if (mainDashboard) mainDashboard.style.display = "block";
+    
+    // ড্যাশবোর্ড চালু হলেই সরাসরি গেম স্ক্রিনটি ওপেন হবে
+    showHomeGame();
+}
+
+
+// ====================================================
+// 🌐 ২. কনস্ট্যান্ট ও ইউআরএল (URLs) কনফিগারেশন
 // ====================================================
 const webAppUrl = "https://script.google.com/macros/s/AKfycbz8yymkZYDsI5_x1kqyAPyV3I_h3hXsGHWohSZw4bI1dcASKb0Fri-bF78FFMhsfE8/exec";
-
 const BANK_SHEET_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vT9W-pIujf18EgJ1bpsX3DnKPFJhRKtUK49KG3UpvvGY3h_vauwIIof9m5g3gMVOPAVgm6I00dXQ8C6/pub?gid=643565073&single=true&output=csv";
 const PAY_ALOTED_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vT9W-pIujf18EgJ1bpsX3DnKPFJhRKtUK49KG3UpvvGY3h_vauwIIof9m5g3gMVOPAVgm6I00dXQ8C6/pub?gid=616652862&single=true&output=csv";
 
 
 // ====================================================
-// 🟢 ২. মেনুবার এবং সেকশন কন্ট্রোল করার ফাংশনসমূহ
+// 🎛️ ৩. সেকশন কন্ট্রোল করার ফাংশনসমূহ
 // ====================================================
 function hideAll() {
-    document.getElementById("mlot-search-section").style.display = "none";
-    document.getElementById("bank-search-section").style.display = "none";
-    document.getElementById("snake-game-section").style.display = "none";
-    stopSnakeGame(); // অন্য সেকশনে গেলে গেম স্টপ হবে
+    const mlotSec = document.getElementById("mlot-search-section");
+    const bankSec = document.getElementById("bank-search-section");
+    const gameSec = document.getElementById("snake-game-section");
+    
+    if (mlotSec) mlotSec.style.display = "none";
+    if (bankSec) bankSec.style.display = "none";
+    if (gameSec) gameSec.style.display = "none";
+    
+    stopSnakeGame(); // অন্য ট্যাবে গেলে যেন গেম নিজে থেকেই বন্ধ হয়ে যায়
 }
 
 function showMlotSection() {
@@ -41,13 +118,16 @@ function showBankSection() {
 
 function showHomeGame() {
     hideAll();
-    document.getElementById("snake-game-section").style.display = "flex";
-    resetGameEngine(); // বোর্ড ক্লিয়ার ও লোড করবে
+    const gameSection = document.getElementById("snake-game-section");
+    if (gameSection) {
+        gameSection.style.display = "flex";
+    }
+    resetGameEngine(); // সাপের পজিশন ও স্কোর ফ্রেশ করবে
 }
 
 
 // ====================================================
-// 🟢 ৩. MLOT SEARCH ফাংশন
+// 📊 ৪. MLOT SEARCH ফাংশন
 // ====================================================
 function searchCID() {
     const searchId = document.getElementById("inputId").value.trim();
@@ -187,7 +267,7 @@ function searchCID() {
 
 
 // ====================================================
-// 🟢 ৪. BANK SEARCH ফাংশন (রিয়েল-টাইম ব্যালেন্স হিসাব সহ)
+// 🏦 ৫. BANK SEARCH ফাংশন
 // ====================================================
 function parseCSVLine(line) {
     return line.split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/).map(item => item.replace(/^"|"$/g, '').trim());
@@ -227,7 +307,6 @@ function searchBankData() {
     .then(([bankCsv, payAlotedCsv]) => {
         if (loading) loading.style.display = "none";
 
-        // ১. 'Pay Aloted' ডেটা সার্চ
         const payLines = payAlotedCsv.split(/\r?\n/);
         let agencyName = "-";       
         let totalReceivableValue = 0;
@@ -251,7 +330,6 @@ function searchBankData() {
             }
         }
 
-        // ২. 'Bank' ডেটা সার্চ ও রিয়েল-টাইম MOBILE যোগফল
         const bankLines = bankCsv.split(/\r?\n/);
         let serialNumber = 1;
         let hasBankData = false;
@@ -293,10 +371,8 @@ function searchBankData() {
             }
         }
 
-        // ৩. ব্যালেন্স হিসাব
         let pendingBalance = totalReceivableValue - mobileReceivedSum;
 
-        // ৪. রেন্ডারিং
         if (hasPayData || hasBankData) {
             if (infoBox) {
                 if (infoAgencyName) infoAgencyName.innerText = agencyName; 
@@ -323,17 +399,15 @@ function searchBankData() {
     .catch(error => {
         if (loading) loading.style.display = "none";
         alert("ডেটা লোড করতে ব্যর্থ হয়েছে!");
-        console.error(error);
     });
 }
 
 
 // ====================================================
-// 🐍 ৫. SNAKE GAME ENGINE
+// 🐍 ৬. SNAKE GAME ENGINE
 // ====================================================
 const canvas = document.getElementById("gameCanvas");
 const ctx = canvas.getContext("2d");
-
 const gridSize = 20;
 const tileCount = canvas.width / gridSize;
 
@@ -359,19 +433,25 @@ function resetGameEngine() {
     dx = gridSize;
     dy = 0;
     score = 0;
-    document.getElementById("currentScore").innerText = score;
-    document.getElementById("startResetBtn").innerText = "Start Game";
+    
+    const currScoreEl = document.getElementById("currentScore");
+    const startBtn = document.getElementById("startResetBtn");
+    
+    if (currScoreEl) currScoreEl.innerText = score;
+    if (startBtn) startBtn.innerText = "Start Game";
+    
     createFood();
     drawGameInit();
 }
 
 function toggleGame() {
+    const startBtn = document.getElementById("startResetBtn");
     if (isGameRunning) {
         stopSnakeGame();
-        document.getElementById("startResetBtn").innerText = "Resume Game";
+        if (startBtn) startBtn.innerText = "Resume Game";
     } else {
         isGameRunning = true;
-        document.getElementById("startResetBtn").innerText = "Pause Game";
+        if (startBtn) startBtn.innerText = "Pause Game";
         gameInterval = setInterval(updateGameFrame, 100);
     }
 }
@@ -385,9 +465,7 @@ function createFood() {
     food.x = Math.floor(Math.random() * tileCount) * gridSize;
     food.y = Math.floor(Math.random() * tileCount) * gridSize;
     snake.forEach(part => {
-        if (part.x === food.x && part.y === food.y) {
-            createFood();
-        }
+        if (part.x === food.x && part.y === food.y) { createFood(); }
     });
 }
 
@@ -406,88 +484,55 @@ function drawGameInit() {
 
 function updateGameFrame() {
     const head = { x: snake[0].x + dx, y: snake[0].y + dy };
-    
     if (head.x < 0 || head.x >= canvas.width || head.y < 0 || head.y >= canvas.height || checkCollision(head)) {
         gameOver();
         return;
     }
-    
     snake.unshift(head);
-    
     if (head.x === food.x && head.y === food.y) {
         score += 10;
-        document.getElementById("currentScore").innerText = score;
+        const currScoreEl = document.getElementById("currentScore");
+        if (currScoreEl) currScoreEl.innerText = score;
+        
         if (score > topScore) {
             topScore = score;
             localStorage.setItem("snakeHighScore", topScore);
-            document.getElementById("highScore").innerText = topScore;
+            const highEl = document.getElementById("highScore");
+            if (highEl) highEl.innerText = topScore;
         }
         createFood();
     } else {
         snake.pop();
     }
-    
     drawGameInit();
 }
 
 function checkCollision(head) {
     for (let i = 1; i < snake.length; i++) {
-        if (snake[i].x === head.x && snake[i].y === head.y) {
-            return true;
-        }
+        if (snake[i].x === head.x && snake[i].y === head.y) { return true; }
     }
     return false;
 }
 
 function changeDirection(event) {
     if (!isGameRunning) return;
-    
-    const LEFT_KEY = 37;
-    const UP_KEY = 38;
-    const RIGHT_KEY = 39;
-    const DOWN_KEY = 40;
-    
+    const LEFT_KEY = 37; const UP_KEY = 38; const RIGHT_KEY = 39; const DOWN_KEY = 40;
     const keyPressed = event.keyCode;
-    const goingUp = dy === -gridSize;
-    const goingDown = dy === gridSize;
-    const goingRight = dx === gridSize;
-    const goingLeft = dx === -gridSize;
-    
-    if (keyPressed === LEFT_KEY && !goingRight) {
-        dx = -gridSize;
-        dy = 0;
-        event.preventDefault();
-    }
-    if (keyPressed === UP_KEY && !goingDown) {
-        dx = 0;
-        dy = -gridSize;
-        event.preventDefault();
-    }
-    if (keyPressed === RIGHT_KEY && !goingLeft) {
-        dx = gridSize;
-        dy = 0;
-        event.preventDefault();
-    }
-    if (keyPressed === DOWN_KEY && !goingUp) {
-        dx = 0;
-        dy = gridSize;
-        event.preventDefault();
-    }
+    if (keyPressed === LEFT_KEY && dx !== gridSize) { dx = -gridSize; dy = 0; event.preventDefault(); }
+    if (keyPressed === UP_KEY && dy !== gridSize) { dx = 0; dy = -gridSize; event.preventDefault(); }
+    if (keyPressed === RIGHT_KEY && dx !== -gridSize) { dx = gridSize; dy = 0; event.preventDefault(); }
+    if (keyPressed === DOWN_KEY && dy !== -gridSize) { dx = 0; dy = gridSize; event.preventDefault(); }
 }
 
 function gameOver() {
     stopSnakeGame();
     ctx.fillStyle = "rgba(0, 0, 0, 0.75)";
     ctx.fillRect(0, 0, canvas.width, canvas.height);
-    
     ctx.fillStyle = "#ff3333";
     ctx.font = "bold 30px Arial";
     ctx.textAlign = "center";
     ctx.fillText("GAME OVER", canvas.width / 2, canvas.height / 2 - 10);
     
-    ctx.fillStyle = "#fff";
-    ctx.font = "16px Arial";
-    ctx.fillText("Click 'Restart' to Try Again!", canvas.width / 2, canvas.height / 2 + 25);
-    
-    document.getElementById("startResetBtn").innerText = "Restart Game";
+    const startBtn = document.getElementById("startResetBtn");
+    if (startBtn) startBtn.innerText = "Restart Game";
 }
