@@ -3,11 +3,13 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>CID & Bank Search System</title>
+    <title>CID & Bank Search System with Retro Game</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
     <style>
-        /* NAVBAR STYLE */
-        .navbar { overflow: hidden; background-color: #333; font-family: Arial, sans-serif; border-radius: 4px; margin-bottom: 20px; box-shadow: 0 2px 5px rgba(0,0,0,0.2); }
+        /* ==================================================== */
+        /* 🎨 NAVBAR STYLE */
+        /* ==================================================== */
+        .navbar { overflow: hidden; background-color: #04565c; font-family: Arial, sans-serif; border-radius: 4px; margin-bottom: 20px; box-shadow: 0 2px 5px rgba(0,0,0,0.2); }
         .navbar a { float: left; font-size: 16px; color: white; text-align: center; padding: 14px 16px; text-decoration: none; transition: 0.3s; }
         .dropdown { float: left; overflow: hidden; }
         .dropdown .dropbtn { font-size: 16px; border: none; outline: none; color: white; padding: 14px 16px; background-color: inherit; font-family: inherit; margin: 0; cursor: pointer; transition: 0.3s; }
@@ -17,54 +19,197 @@
         .dropdown-content a:hover { background-color: #ddd; color: black; }
         .dropdown:hover .dropdown-content { display: block; }
 
-        /* SEARCH BOX */
+        /* ==================================================== */
+        /* 🔍 SEARCH BOX */
+        /* ==================================================== */
         .search-box { margin-bottom: 20px; display: flex; align-items: center; flex-wrap: wrap; gap: 10px; }
         .search-box label { font-weight: bold; font-size: 20px; font-family: Arial, sans-serif; }
         .search-box input { font-size: 18px; padding: 8px 12px; width: 250px; border: 1px solid #ccc; border-radius: 4px; font-family: Arial, sans-serif; }
         .search-box button { background-color: #009688; color: white; padding: 8px 20px; border: none; border-radius: 4px; cursor: pointer; font-weight: bold; font-size: 18px; font-family: Arial, sans-serif; transition: 0.3s; }
         .search-box button:hover { background-color: #00796b; }
 
-        /* TABLES COMMON STYLE */
+        /* ==================================================== */
+        /* 📊 TABLES COMMON STYLE */
+        /* ==================================================== */
         table { 
-            width: 100% !important;        /* টেবিলটি স্ক্রিনের বাম থেকে ডান পর্যন্ত পুরো বড় হবে */
-            max-width: 1200px;             /* খুব বেশি বড় স্ক্রিনে যাতে অতিরিক্ত ছড়িয়ে না যায়, তাই একটি সীমানা */
-            margin: 20px auto !important;  /* auto দেওয়ার কারণে টেবিলটি একদম স্ক্রিনের মাঝখানে (Center) চলে আসবে */
+            width: 100% !important;        
+            max-width: 1200px;             
+            margin: 20px auto !important;  
             border-collapse: collapse; 
             font-family: Arial, sans-serif; 
-            font-size: 14px;               /* টেবিলের ভেতরের লেখার সাইজ সামান্য বাড়ানো হলো */
-            box-shadow: 0 4px 8px rgba(0,0,0,0.1); /* দেখতে সুন্দর লাগার জন্য হালকা শ্যাডো */
+            font-size: 14px;               
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1); 
         }
 
-        /* 🟢 হেডিং আরও স্পষ্ট এবং পারফেক্ট সাইজ করার জন্য */
         table th { 
             font-weight: bold; 
-            padding: 12px 15px;            /* হেডিং-এর ঘরগুলো দেখতে এখন বেশ চওড়া ও সুন্দর লাগবে */
+            padding: 12px 15px;            
             border: 1px solid #454d55; 
-            font-size: 16px;               /* হেডিং-এর লেখার সাইজ আরেকটু বড় করা হলো */
+            font-size: 16px;               
             line-height: 1.4; 
             text-align: center;
         }
 
-        /* 🟢 ডেটা রো গুলোর ভেতরের ফাঁকা জায়গা (Padding) একটু বাড়ানো হলো যাতে বড় দেখায় */
         table td {
-            padding: 10px 12px !important; /* লেখার চারপাশের ফাঁকা জায়গা বাড়িয়ে টেবিলটি বড় করা হলো */
+            padding: 10px 12px !important; 
             border: 1px solid #dee2e6;
             vertical-align: middle;
             text-align: center;
         }
 
-        /* BANK TABLE SPECIAL COLORS */
+        /* BANK TABLE COLORS */
         .bank-table-header { background-color: #444; color: #fff; text-align: center; }
         .bank-data-tr { background-color: #dcdcdc; text-align: center; font-weight: bold; }
         .bank-amount-color { color: #a52a2a; font-weight: bold; }
         .bank-empty-tr { background-color: #dcdcdc; text-align: center; color: #a52a2a; font-weight: bold; }
+
+        /* SERVER & ALOTED MINI DETAILS ROW */
+        .mini-details-bar {
+            display: flex;
+            justify-content: space-between;
+            max-width: 1200px;
+            margin: 10px auto;
+            padding: 8px 15px;
+            background-color: #f1f3f5;
+            border-left: 5px solid #2b579a;
+            border-radius: 4px;
+            font-family: Arial, sans-serif;
+            font-size: 14px;
+            font-weight: bold;
+            color: #495057;
+        }
+        .mini-details-bar span span {
+            color: #2b579a;
+        }
+
+        /* ==================================================== */
+        /* ✨ INFO GRID & CARD LAYOUT */
+        /* ==================================================== */
+        .info-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 15px;
+            max-width: 1200px;
+            margin: 20px auto;
+            font-family: Arial, sans-serif;
+        }
+
+        .info-card {
+            background: #ffffff;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 15px;
+            text-align: center;
+            box-shadow: 0 3px 6px rgba(0,0,0,0.05);
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        .info-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 12px rgba(0,0,0,0.1);
+        }
+
+        .info-card .label {
+            font-size: 12px;
+            text-transform: uppercase;
+            color: #777777;
+            margin-bottom: 6px;
+            font-weight: bold;
+            letter-spacing: 0.5px;
+        }
+
+        .info-card .value {
+            font-size: 22px;
+            font-weight: bold;
+            color: #333333;
+        }
+
+        /* CARD THEMES */
+        .card-agency { border-top: 4px solid #007bff; }
+        .card-agency .value { color: #007bff; }
+
+        .card-receivable { border-top: 4px solid #e0a800; }
+        .card-receivable .value { color: #e0a800; }
+
+        .card-received { border-top: 4px solid #28a745; }
+        .card-received .value { color: #28a745; }
+
+        .card-pending { border-top: 4px solid #dc3545; }
+        .card-pending .value { color: #dc3545; }
+
+        /* ==================================================== */
+        /* 🐍 RETRO SNAKE GAME STYLES */
+        /* ==================================================== */
+        .game-container {
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            margin: 30px auto;
+            font-family: Arial, sans-serif;
+            background: #222;
+            padding: 20px;
+            border-radius: 12px;
+            max-width: 440px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.5);
+            color: #fff;
+            text-align: center;
+        }
+
+        .game-title {
+            font-size: 24px;
+            color: #4CAF50;
+            margin-bottom: 10px;
+            font-weight: bold;
+            text-shadow: 0 0 5px rgba(76, 175, 80, 0.5);
+        }
+
+        .score-board {
+            display: flex;
+            justify-content: space-between;
+            width: 100%;
+            max-width: 400px;
+            margin-bottom: 15px;
+            font-size: 18px;
+            font-weight: bold;
+        }
+
+        #gameCanvas {
+            background-color: #111;
+            border: 4px solid #4CAF50;
+            border-radius: 6px;
+            box-shadow: inset 0 0 10px #000;
+        }
+
+        .game-instructions {
+            margin-top: 15px;
+            font-size: 13px;
+            color: #aaa;
+            line-height: 1.4;
+        }
+
+        .game-btn {
+            margin-top: 15px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            padding: 8px 20px;
+            font-size: 16px;
+            font-weight: bold;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: 0.3s;
+        }
+
+        .game-btn:hover {
+            background-color: #45a049;
+        }
     </style>
 </head>
 <body>
 
-    <!-- NAVBAR -->
     <div class="navbar">
-        <a href="#home" onclick="hideAll()">Home</a>
+        <a href="#home" onclick="showHomeGame()">Home</a>
         <div class="dropdown">
             <button class="dropbtn">Report <i class="fa fa-caret-down"></i></button>
             <div class="dropdown-content">
@@ -74,7 +219,20 @@
         </div>
     </div>
 
-    <!-- ১. MLOT SEARCH সেকশন -->
+    <div id="snake-game-section" class="game-container">
+        <div class="game-title">🐍 Retro Snake Game</div>
+        <div class="score-board">
+            <span>Score: <span id="currentScore" style="color: #4CAF50;">0</span></span>
+            <span>High Score: <span id="highScore" style="color: #ff9800;">0</span></span>
+        </div>
+        <canvas id="gameCanvas" width="400" height="400"></canvas>
+        <button id="startResetBtn" class="game-btn" onclick="toggleGame()">Start Game</button>
+        <div class="game-instructions">
+            ⌨️ কিবোর্ডের <b>Arrow Keys (Up, Down, Left, Right)</b> দিয়ে সাপটি কন্ট্রোল করুন। <br>
+            ফ্রি টাইমে হাই-স্কোর ভাঙার চেষ্টা করুন!
+        </div>
+    </div>
+
     <div id="mlot-search-section" style="display: none; padding: 10px;"> 
         <h2>CID Full Details Search System</h2>
         <div class="search-box">
@@ -96,7 +254,6 @@
         </div>
     </div>
 
-    <!-- ২. BANK SEARCH সেকশন (ডুপ্লিকেট রিমুভড ও ফিক্সড) -->
     <div id="bank-search-section" style="display: none; padding: 10px;"> 
         <h2>Bank Statement Search System</h2>
         <div class="search-box">
@@ -105,12 +262,27 @@
             <button onclick="searchBankData()" style="background-color: #2b579a;">Search</button>
         </div>
 
-        <!-- 🟢 Pay Aloted শীট থেকে আসা তথ্যের ইনফো বক্স -->
-        <div id="bankInfoBox" style="display: none; background-color: #f1f3f5; border: 1px solid #ced4da; border-radius: 6px; padding: 12px; margin: 15px auto; max-width: 1200px; font-family: Arial, sans-serif;">
-            <div style="display: flex; flex-wrap: wrap; gap: 20px; justify-content: space-around; font-weight: bold; font-size: 15px;">
-                <div>Total Receivable: <span id="infoReceivable" style="color: #d9534f;">-</span></div>
-                <div>Server: <span id="infoServer" style="color: #0275d8;">-</span></div>
-                <div>Aloted Name: <span id="infoAlotedName" style="color: #5cb85c;">-</span></div>
+        <div id="bankMetaDetails" class="mini-details-bar" style="display: none;">
+            <span>Server: <span id="infoServer">-</span></span>
+            <span>Aloted Name: <span id="infoAlotedName">-</span></span>
+        </div>
+
+        <div id="bankInfoBox" class="info-grid" style="display: none;">
+            <div class="info-card card-agency">
+                <div class="label">Agency Name</div>
+                <div id="infoAgencyName" class="value">-</div>
+            </div>
+            <div class="info-card card-receivable">
+                <div class="label">Total Receivable</div>
+                <div id="infoReceivable" class="value">-</div>
+            </div>
+            <div class="info-card card-received">
+                <div class="label">Mobile Received</div>
+                <div id="infoReceived" class="value">0</div>
+            </div>
+            <div class="info-card card-pending">
+                <div class="label">Pending Balance</div>
+                <div id="infoPending" class="value">0</div>
             </div>
         </div>
 
