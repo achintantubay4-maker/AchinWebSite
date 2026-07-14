@@ -5,7 +5,9 @@ const ALLOWED_USERS = {
     "admin": "12345",      // User ID: admin , Password: pass123
     "dilip": "cricket77",    // User ID: dilip , Password: cricket77
     "sourav": "123456",
-    "subir": "123456",    // User ID: akasa , Password: survey2026
+    "subir": "123456", 
+    "Achin": "achin12345",
+    // User ID: akasa , Password: survey2026
 };
 
 // পেজ লোড হবার সাথে সাথে লগইন স্ট্যাটাস চেক করবে
