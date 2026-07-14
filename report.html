@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Secure CID System - Reports</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+    <style>
+        body { font-family: Arial, sans-serif; background-color: #f4f6f9; margin: 0; padding: 0; }
+        .navbar { overflow: hidden; background-color: #880505; font-family: Arial, sans-serif; border-radius: 4px; margin-bottom: 20px; box-shadow: 0 2px 5px rgba(0,0,0,0.2); }
+        .navbar a { float: left; font-size: 16px; color: white; text-align: center; padding: 14px 16px; text-decoration: none; transition: 0.3s; }
+        .navbar a.logout-btn { float: right; background-color: #dc3545; }
+        .navbar a.logout-btn:hover { background-color: #bd2130; }
+        .dropdown { float: left; overflow: hidden; }
+        .dropdown .dropbtn { font-size: 16px; border: none; outline: none; color: white; padding: 14px 16px; background-color: inherit; font-family: inherit; margin: 0; cursor: pointer; transition: 0.3s; }
+        .navbar a:hover, .dropdown:hover .dropbtn { background-color: #009688; }
+        .dropdown-content { display: none; position: absolute; background-color: #f9f9f9; min-width: 180px; box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.2); z-index: 999; border-radius: 0 0 4px 4px; }
+        .dropdown-content a { float: none; color: black; padding: 12px 16px; text-decoration: none; display: block; text-align: left; }
+        .dropdown-content a:hover { background-color: #ddd; color: black; }
+        .dropdown:hover .dropdown-content { display: block; }
+
+        /* SEARCH BOX */
+        .search-box { margin-bottom: 20px; display: flex; align-items: center; flex-wrap: wrap; gap: 10px; }
+        .search-box label { font-weight: bold; font-size: 20px; }
+        .search-box input { font-size: 18px; padding: 8px 12px; width: 250px; border: 1px solid #ccc; border-radius: 4px; }
+        .search-box button { background-color: #009688; color: white; padding: 8px 20px; border: none; border-radius: 4px; cursor: pointer; font-weight: bold; font-size: 18px; transition: 0.3s; }
+        .search-box button:hover { background-color: #00796b; }
+
+        /* BADGES */
+        .badge-orange { background-color: #ff9800; color: white; padding: 6px 14px; border-radius: 4px; font-weight: bold; font-size: 15px; display: inline-block; }
+        .badge-green { background-color: #009688; color: white; padding: 6px 14px; border-radius: 4px; font-weight: bold; font-size: 15px; display: inline-block; }
+
+        /* TABLES */
+        table { width: 100% !important; max-width: 1200px; margin: 20px auto !important; border-collapse: collapse; font-size: 14px; box-shadow: 0 4px 8px rgba(0,0,0,0.1); background: #fff; }
+        table th { font-weight: bold; padding: 12px 15px; border: 1px solid #454d55; font-size: 16px; text-align: center; }
+        table td { padding: 10px 12px !important; border: 1px solid #dee2e6; text-align: center; vertical-align: middle; }
+
+        .bank-table-header { background-color: #444; color: #fff; }
+        .bank-data-tr { background-color: #ffffff; font-weight: bold; }
+        .bank-amount-color { color: #a52a2a; font-weight: bold; }
+        .bank-empty-tr { background-color: #dcdcdc; color: #a52a2a; font-weight: bold; }
+
+        .mini-details-bar { display: flex; justify-content: space-between; max-width: 1200px; margin: 10px auto; padding: 8px 15px; background-color: #f1f3f5; border-left: 5px solid #2b579a; border-radius: 4px; font-size: 14px; font-weight: bold; color: #495057; }
+        .mini-details-bar span span { color: #2b579a; }
+
+        /* INFO GRID */
+        .info-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 15px; max-width: 1200px; margin: 20px auto; }
+        .info-card { background: #ffffff; border: 1px solid #e0e0e0; border-radius: 8px; padding: 15px; text-align: center; box-shadow: 0 3px 6px rgba(0,0,0,0.05); }
+        .info-card .label { font-size: 12px; text-transform: uppercase; color: #777777; margin-bottom: 6px; font-weight: bold; }
+        .info-card .value { font-size: 22px; font-weight: bold; }
+
+        .card-agency { border-top: 4px solid #007bff; } .card-agency .value { color: #007bff; }
+        .card-receivable { border-top: 4px solid #e0a800; } .card-receivable .value { color: #e0a800; }
+        .card-received { border-top: 4px solid #28a745; } .card-received .value { color: #28a745; }
+        .card-pending { border-top: 4px solid #dc3545; } .card-pending .value { color: #dc3545; }
+    </style>
+</head>
+<body>
+
+    <div class="navbar">
+        <a href="index.html">Home</a>
+        <div class="dropdown">
+            <button class="dropbtn">Report <i class="fa fa-caret-down"></i></button>
+            <div class="dropdown-content">
+                <a href="javascript:void(0)" onclick="switchReportTab('mlot')">Mlot >1000 Search</a>
+                <a href="javascript:void(0)" onclick="switchReportTab('bank')">Bank Search</a>
+            </div>
+        </div>
+        <a href="javascript:void(0)" class="logout-btn" onclick="handleLogout()"><i class="fa fa-sign-out"></i> Logout</a>
+    </div>
+
+    <div id="mlot-search-section" style="display: none; padding: 10px;"> 
+        <h2>CID Full Details Search System</h2>
+        <div class="search-box">
+            <label for="inputId">Enter MLOT ID : </label>
+            <input type="text" id="inputId" placeholder="Type ID and search...">
+            <button onclick="searchCID()">Search</button>
+            <div id="totalCounter" style="display: inline-flex; gap: 10px; align-items: center; vertical-align: middle;"></div>
+        </div>
+        <div id="loading" style="display: none; color: blue; font-weight: bold; margin: 10px 0;">Data load হচ্ছে...</div>
+        <div id="noResult" style="display: none; color: red; font-weight: bold; margin: 10px 0;">কোনো তথ্য পাওয়া যায়নি!</div>
+        
+        <div style="overflow-x: auto;">
+            <table>
+                <thead id="tableHeader"></thead>
+                <tbody id="tableBody">
+                    <tr><td colspan="20" style="text-align: center; color: #555; padding: 20px;">Enter an ID and click Search to see details.</td></tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <div id="bank-search-section" style="display: none; padding: 10px;"> 
+        <h2>Bank Statement Search System</h2>
+        <div class="search-box">
+            <label for="inputBankCID">Enter CID : </label>
+            <input type="text" id="inputBankCID" placeholder="Type CID and search...">
+            <button onclick="searchBankData()" style="background-color: #2b579a;">Search</button>
+        </div>
+
+        <div id="bankMetaDetails" class="mini-details-bar" style="display: none;">
+            <span>Server: <span id="infoServer">-</span></span>
+            <span>Aloted Name: <span id="infoAlotedName">-</span></span>
+        </div>
+
+        <div id="bankInfoBox" class="info-grid" style="display: none;">
+            <div class="info-card card-agency"><div class="label">Agency Name</div><div id="infoAgencyName" class="value">-</div></div>
+            <div class="info-card card-receivable"><div class="label">Total Receivable</div><div id="infoReceivable" class="value">-</div></div>
+            <div class="info-card card-received"><div class="label">Mobile Received</div><div id="infoReceived" class="value">0</div></div>
+            <div class="info-card card-pending"><div class="label">Pending Balance</div><div id="infoPending" class="value">0</div></div>
+        </div>
+
+        <div id="bankLoading" style="display: none; color: blue; font-weight: bold; margin: 10px 0;">Bank Data খোঁজা হচ্ছে...</div>
+        <div id="bankNoResult" style="display: none; color: red; font-weight: bold; margin: 10px 0;">এই CID-এর কোনো ব্যাংক রেকর্ড পাওয়া যায়নি!</div>
+        
+        <div style="overflow-x: auto;">
+            <table>
+                <thead>
+                    <tr class="bank-table-header">
+                        <th>SNo</th><th>UTR</th><th>Amount</th><th>PayerPaymentDate</th><th>Eligble</th>
+                    </tr>
+                </thead>
+                <tbody id="bankTableBody">
+                    <tr><td colspan="5" style="text-align: center; color: #555; padding: 20px;">Enter CID and click Search to see Bank Details.</td></tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+    <script src="script2.js"></script>
+</body>
+</html>
