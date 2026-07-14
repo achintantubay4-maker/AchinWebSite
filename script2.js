@@ -1,11 +1,13 @@
 // ====================================================
-// 🌐 ১. কনফিগারেশন ইউআরএল
+// 🌐 ১. কনফিগারেশন ইউআরএল (ক্যাশিং প্রতিরোধক সহ)
 // ====================================================
 const webAppUrl = "https://script.google.com/macros/s/AKfycbz8yymkZYDsI5_x1kqyAPyV3I_h3hXsGHWohSZw4bI1dcASKb0Fri-bF78FFMhsfE8/exec";
-const BANK_SHEET_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vT9W-pIujf18EgJ1bpsX3DnKPFJhRKtUK49KG3UpvvGY3h_vauwIIof9m5g3gMVOPAVgm6I00dXQ8C6/pub?gid=643565073&single=true&output=csv";
-const PAY_ALOTED_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vT9W-pIujf18EgJ1bpsX3DnKPFJhRKtUK49KG3UpvvGY3h_vauwIIof9m5g3gMVOPAVgm6I00dXQ8C6/pub?gid=616652862&single=true&output=csv";
 
-// গ্লোবাল মেমোরি ক্যাশ (স্পিড বুস্ট করার জন্য)
+// ক্যাশ এড়ানোর জন্য ইউআরএল-এর শেষে টাইমস্ট্যাম্প যোগ করা হয়েছে
+const BANK_SHEET_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vT9W-pIujf18EgJ1bpsX3DnKPFJhRKtUK49KG3UpvvGY3h_vauwIIof9m5g3gMVOPAVgm6I00dXQ8C6/pub?gid=643565073&single=true&output=csv&_cb=" + new Date().getTime();
+const PAY_ALOTED_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vT9W-pIujf18EgJ1bpsX3DnKPFJhRKtUK49KG3UpvvGY3h_vauwIIof9m5g3gMVOPAVgm6I00dXQ8C6/pub?gid=616652862&single=true&output=csv&_cb=" + new Date().getTime();
+
+// গ্লোবাল মেমোরি ক্যাশ
 let cachedBankData = null;
 let cachedPayData = null;
 
@@ -14,7 +16,7 @@ document.addEventListener("DOMContentLoaded", function() {
     const section = urlParams.get('section') || 'mlot';
     switchReportTab(section);
     
-    // ব্যাকগ্রাউন্ডে আগে থেকেই ব্যাংক ডেটা লোড করে রাখা (যাতে সার্চে সময় না লাগে)
+    // ব্যাকগ্রাউন্ডে তাজা ডেটা লোড করে রাখা
     preloadBankData();
 });
 
@@ -28,9 +30,17 @@ function switchReportTab(tabName) {
     }
 }
 
+// ক্যাশ মেমোরি বাইপাস করে সরাসরি গুগল সার্ভার থেকে সম্পূর্ণ ফাইল ফ্লেশ করা হচ্ছে
 function preloadBankData() {
-    fetch(BANK_SHEET_URL).then(res => res.text()).then(csv => { cachedBankData = csv.split(/\r?\n/); }).catch(e => console.log("Preload Error"));
-    fetch(PAY_ALOTED_URL).then(res => res.text()).then(csv => { cachedPayData = csv.split(/\r?\n/); }).catch(e => console.log("Preload Error"));
+    fetch(BANK_SHEET_URL, { cache: "no-store" })
+        .then(res => res.text())
+        .then(csv => { cachedBankData = csv.split(/\r?\n/); })
+        .catch(e => console.log("Preload Error Bank"));
+        
+    fetch(PAY_ALOTED_URL, { cache: "no-store" })
+        .then(res => res.text())
+        .then(csv => { cachedPayData = csv.split(/\r?\n/); })
+        .catch(e => console.log("Preload Error Pay"));
 }
 
 // ডেট ফরম্যাট করার হেল্পার ফাংশন (YYYY-MM-DD থেকে DD-MM-YYYY)
@@ -83,11 +93,9 @@ function searchCID() {
         let grandTotalDespatchGt1000 = 0;
         let lastCreateDate = "-";
         
-        // "CreateDt" কলামের ইনডেক্স খুঁজে বের করা
         let createDtIndex = data.mainHeader.findIndex(col => String(col).toLowerCase().trim() === "createdt");
 
         data.rows.forEach(row => {
-            // ডেট সংরক্ষন করা
             if (createDtIndex !== -1 && row[createDtIndex]) {
                 lastCreateDate = String(row[createDtIndex]);
             }
@@ -102,7 +110,6 @@ function searchCID() {
             });
         });
 
-        // 🛠️ এখানে সবুজ ডেট ব্যাজ ফিরিয়ে আনা হয়েছে
         if (totalCounter) {
             totalCounter.innerHTML = `
                 <span class="badge-orange">Total Despatch >1000: ${grandTotalDespatchGt1000} বার</span>
@@ -123,7 +130,6 @@ function searchCID() {
             rowsHtml += "<tr>";
             row.forEach((cell, cellIndex) => { 
                 let displayValue = (cell !== undefined && cell !== "") ? cell : "-";
-                // টেবিলের ভেতরের CreateDt কলামকেও সুন্দর ফরম্যাটে দেখানো
                 if (cellIndex === createDtIndex) {
                     displayValue = formatDateToDMY(String(displayValue));
                 }
@@ -132,10 +138,8 @@ function searchCID() {
             rowsHtml += "</tr>";
         });
         
-        // একবারে DOM ইনজেক্ট করা (ফাস্ট রেন্ডারিং)
         tableBody.innerHTML = sumHtml + "</tr>" + rowsHtml;
         
-        // ক্লিনআপ
         if (document.getElementById("jsonpScript")) {
             document.getElementById("jsonpScript").remove();
         }
@@ -168,11 +172,14 @@ function searchBankData() {
     document.getElementById("bankInfoBox").style.display = "none";
     document.getElementById("bankMetaDetails").style.display = "none";
 
-    // যদি ডেটা আগে থেকে ক্যাশ না হয়ে থাকে, তবে নরমাল ফেচ করবে
+    // ক্যাশ চেক করে প্রসেস করা, না থাকলে সরাসরি নো-ক্যাশ ফেচ হবে
     if (cachedBankData && cachedPayData) {
         processBankSearch(cachedBankData, cachedPayData, inputId, loading, noResult, tableBody);
     } else {
-        Promise.all([ fetch(BANK_SHEET_URL).then(res => res.text()), fetch(PAY_ALOTED_URL).then(res => res.text()) ])
+        Promise.all([ 
+            fetch(BANK_SHEET_URL, { cache: "no-store" }).then(res => res.text()), 
+            fetch(PAY_ALOTED_URL, { cache: "no-store" }).then(res => res.text()) 
+        ])
         .then(([bankCsv, payAlotedCsv]) => {
             cachedBankData = bankCsv.split(/\r?\n/);
             cachedPayData = payAlotedCsv.split(/\r?\n/);
@@ -186,6 +193,7 @@ function processBankSearch(bankLines, payLines, inputId, loading, noResult, tabl
     loading.style.display = "none";
     let agencyName = "-", totalReceivableValue = 0, serverName = "-", alotedTo = "-", hasPayData = false;
 
+    // PAY ALOTED ডেটা সার্চিং (৬০০০+ রো এর জন্য নিখুঁত সার্চ)
     for (let i = 1; i < payLines.length; i++) {
         const columns = parseCSVLine(payLines[i]);
         if (columns[1] === inputId) {
@@ -197,6 +205,7 @@ function processBankSearch(bankLines, payLines, inputId, loading, noResult, tabl
 
     let serialNumber = 1, hasBankData = false, htmlContent = "", mobileReceivedSum = 0;
 
+    // BANK STATEMENT ডেটা সার্চিং
     for (let i = 1; i < bankLines.length; i++) {
         const columns = parseCSVLine(bankLines[i]);
         if (columns[1] === inputId) {
