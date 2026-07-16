@@ -29,7 +29,7 @@
         /* TABLES */
         table { width: 100% !important; max-width: 1200px; margin: 20px auto !important; border-collapse: collapse; font-size: 14px; box-shadow: 0 4px 8px rgba(0,0,0,0.1); background: #fff; }
         table th { font-weight: bold; padding: 12px 15px; border: 1px solid #454d55; font-size: 16px; text-align: center; }
-        table td { padding: 10px 12px !important; border: 1px solid #dee2e6; text-align: center; vertical-align: middle; }
+        table table td { padding: 10px 12px !important; border: 1px solid #dee2e6; text-align: center; vertical-align: middle; }
         .bank-table-header { background-color: #444; color: #fff; }
         .mini-details-bar { display: flex; justify-content: space-between; max-width: 1200px; margin: 10px auto; padding: 8px 15px; background-color: #f1f3f5; border-left: 5px solid #2b579a; border-radius: 4px; font-size: 14px; font-weight: bold; color: #495057; }
         .info-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 15px; max-width: 1200px; margin: 20px auto; }
@@ -51,7 +51,7 @@
             <div class="dropdown-content">
                 <a href="javascript:void(0)" onclick="switchReportTab('mlot')">Mlot >1000 Search</a>
                 <a href="javascript:void(0)" onclick="switchReportTab('bank')">Bank Search</a>
-                <a href="map.html">CID Wise Map</a> <!-- 👈 সরাসরি নতুন ফাইলে চলে যাবে -->
+                <a href="map.html">CID Wise Map</a>
             </div>
         </div>
         <a href="javascript:void(0)" class="logout-btn" onclick="handleLogout()"><i class="fa fa-sign-out"></i> Logout</a>
@@ -66,8 +66,8 @@
             <button onclick="searchCID()">Search</button>
             <div id="totalCounter" style="display: inline-flex; gap: 10px; align-items: center; vertical-align: middle;"></div>
         </div>
-        <div id="loading" style="display: none; color: blue; font-weight: bold; margin: 10px 0;">Data load হচ্ছে...</div>
-        <div id="noResult" style="display: none; color: red; font-weight: bold; margin: 10px 0;">কোনো তথ্য পাওয়া যায়নি!</div>
+        <div id="loading" style="display: none; color: blue; font-weight: bold; margin: 10px 0;">Loading data...</div>
+        <div id="noResult" style="display: none; color: red; font-weight: bold; margin: 10px 0;">No details found!</div>
         
         <div style="overflow-x: auto;">
             <table>
@@ -97,8 +97,8 @@
             <div class="info-card card-received"><div class="label">Mobile Received</div><div id="infoReceived" class="value">0</div></div>
             <div class="info-card card-pending"><div class="label">Pending Balance</div><div id="infoPending" class="value">0</div></div>
         </div>
-        <div id="bankLoading" style="display: none; color: blue; font-weight: bold; margin: 10px 0;">Bank Data খোঁজা হচ্ছে...</div>
-        <div id="bankNoResult" style="display: none; color: red; font-weight: bold; margin: 10px 0;">এই CID-এর কোনো ব্যাংক রেকর্ড পাওয়া যায়নি!</div>
+        <div id="bankLoading" style="display: none; color: blue; font-weight: bold; margin: 10px 0;">Searching bank data...</div>
+        <div id="bankNoResult" style="display: none; color: red; font-weight: bold; margin: 10px 0;">No bank records found for this CID!</div>
         <div style="overflow-x: auto;">
             <table>
                 <thead>
@@ -114,7 +114,6 @@
     </div>
 
     <script>
-        // Tab switching function for Mlot and Bank
         function switchReportTab(tabName) {
             if(tabName === 'mlot') {
                 document.getElementById('mlot-search-section').style.display = 'block';
@@ -125,11 +124,12 @@
             }
         }
 
-        // URL চেক করে অটোমেটিক সঠিক ট্যাব খোলার লজিক
         window.onload = function() {
             const urlParams = new URLSearchParams(window.location.search);
-            const tab = urlParams.get('tab');
-            if (tab) switchReportTab(tab);
+            const section = urlParams.get('section');
+            if (section) {
+                switchReportTab(section);
+            }
         };
     </script>
     <script src="script.js"></script>

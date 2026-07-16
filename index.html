@@ -74,7 +74,7 @@
         #btn-right { grid-area: right; }
         #btn-down { grid-area: down; margin: 0 auto; }
 
-        /* মোবাইল ব্রাউজারের জন্য মিডিয়া কোয়েরি */
+        /* মোবাইল ব্রাউজারের জন্য মিডিয়া কোয়েরি */
         @media (max-width: 768px) {
             .mobile-controls { display: grid; } /* মোবাইলে কন্ট্রোলার দেখাবে */
             #gameCanvas { width: 90vw; height: 90vw; max-width: 360px; max-height: 360px; } /* রেস্পনসিভ বোর্ড */
@@ -100,6 +100,7 @@
     </div>
 
     <div id="main-dashboard">
+        <!-- 🛠️ FIXED NAVBAR FOR HOME -->
         <div class="navbar">
             <a href="index.html">Home</a>
             <div class="dropdown">
@@ -107,6 +108,7 @@
                 <div class="dropdown-content">
                     <a href="report.html?section=mlot">Mlot >1000 Search</a>
                     <a href="report.html?section=bank">Bank Search</a>
+                    <a href="map.html">CID Wise Map</a> <!-- ✅ ড্রপডাউনে ম্যাপ অপশনটি ফিক্স করা হলো -->
                 </div>
             </div>
             <a href="javascript:void(0)" class="logout-btn" onclick="handleLogout()"><i class="fa fa-sign-out"></i> Logout</a>
@@ -131,7 +133,7 @@
 
             <button id="startResetBtn" class="game-btn" onclick="toggleGame()" style="margin-top:20px;">Start Game</button>
             <div class="game-instructions">
-                ⌨️ কম্পিউটার বা মোবাইলের টাচ বাটন দিয়ে কন্ট্রোল করুন।
+                ⌨️ কম্পিউটার বা মোবাইলের টাচ বাটন দিয়ে কন্ট্রোল করুন।
             </div>
         </div>
     </div>
