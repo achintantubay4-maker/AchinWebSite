@@ -1,0 +1,459 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CID & Pincode Live Map - Strict Boundary Fallback</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <style>
+        body { font-family: Arial, sans-serif; background-color: #f4f6f9; margin: 0; padding: 20px; }
+        .navbar { overflow: hidden; background-color: #880505; font-family: Arial, sans-serif; border-radius: 4px; margin-bottom: 20px; box-shadow: 0 2px 5px rgba(0,0,0,0.2); }
+        .navbar a { float: left; font-size: 16px; color: white; text-align: center; padding: 14px 16px; text-decoration: none; transition: 0.3s; }
+        .navbar a.logout-btn { float: right; background-color: #dc3545; }
+        .navbar a.logout-btn:hover { background-color: #bd2130; }
+        .dropdown { float: left; overflow: hidden; }
+        .dropdown .dropbtn { font-size: 16px; border: none; outline: none; color: white; padding: 14px 16px; background-color: inherit; font-family: inherit; margin: 0; cursor: pointer; transition: 0.3s; }
+        .navbar a:hover, .dropdown:hover .dropbtn { background-color: #009688; }
+        .dropdown-content { display: none; position: absolute; background-color: #f9f9f9; min-width: 180px; box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.2); z-index: 999; border-radius: 0 0 4px 4px; }
+        .dropdown-content a { float: none; color: black; padding: 12px 16px; text-decoration: none; display: block; text-align: left; }
+        .dropdown-content a:hover { background-color: #ddd; color: black; }
+        .dropdown:hover .dropdown-content { display: block; }
+
+        /* SEARCH BOX */
+        .search-box { margin-bottom: 20px; display: flex; align-items: center; flex-wrap: wrap; gap: 15px; }
+        .search-box label { font-weight: bold; font-size: 16px; }
+        .search-box input, .search-box select { font-size: 15px; padding: 8px 12px; width: 220px; border: 1px solid #ccc; border-radius: 4px; background-color: white; }
+        .search-box button { background-color: #009688; color: white; padding: 8px 16px; border: none; border-radius: 4px; cursor: pointer; font-weight: bold; font-size: 15px; transition: 0.3s; }
+        .search-box button:hover { background-color: #00796b; }
+
+        /* MAP CONTAINER */
+        #map { height: 600px; max-width: 1300px; margin: 20px auto; border-radius: 8px; box-shadow: 0 4px 10px rgba(0,0,0,0.15); border: 2px solid #ccc; position: relative; }
+
+        /* Custom Tooltip Style */
+        .custom-tooltip {
+            background-color: #222 !important;
+            color: #fff !important;
+            border: 1px solid #000 !important;
+            font-size: 13px !important;
+            border-radius: 6px !important;
+            padding: 10px !important;
+            box-shadow: 0 3px 8px rgba(0,0,0,0.4) !important;
+        }
+        .custom-tooltip .tooltip-title {
+            color: #ffeb3b;
+            font-weight: bold;
+            font-size: 15px;
+            margin-bottom: 5px;
+            border-bottom: 1px dashed #555;
+            padding-bottom: 3px;
+        }
+
+        /* Action Buttons Inside Popup */
+        .action-btn-container { display: flex; gap: 5px; margin-top: 8px; }
+        .streetview-btn { background-color: #4285F4; color: white !important; text-decoration: none; padding: 6px 10px; border-radius: 4px; font-weight: bold; font-size: 11px; text-align: center; flex: 1; }
+        .direction-btn { background-color: #28a745; color: white !important; text-decoration: none; padding: 6px 10px; border-radius: 4px; font-weight: bold; font-size: 11px; text-align: center; flex: 1; }
+        .direction-btn:hover { background-color: #218838; }
+        .streetview-btn:hover { background-color: #357ae8; }
+
+        /* USER LIVE LOCATION PULSE EFFECT */
+        .user-location-marker {
+            background: #1a73e8;
+            border: 3px solid white;
+            border-radius: 50%;
+            box-shadow: 0 0 0 8px rgba(26, 115, 232, 0.4);
+            animation: pulse 1.8s infinite;
+        }
+        @keyframes pulse {
+            0% { box-shadow: 0 0 0 0px rgba(26, 115, 232, 0.7); }
+            70% { box-shadow: 0 0 0 12px rgba(26, 115, 232, 0); }
+            100% { box-shadow: 0 0 0 0px rgba(26, 115, 232, 0); }
+        }
+
+        /* GPS Location Button Overlay */
+        .gps-btn {
+            position: absolute;
+            top: 100px;
+            left: 10px;
+            z-index: 1000;
+            background: white;
+            border: 2px solid rgba(0,0,0,0.2);
+            border-radius: 4px;
+            width: 34px;
+            height: 34px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+            color: #333;
+            box-shadow: 0 1px 5px rgba(0,0,0,0.4);
+        }
+        .gps-btn:hover { background: #f4f4f4; color: #1a73e8; }
+    </style>
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+</head>
+<body>
+
+    <div class="navbar">
+        <a href="index.html">Home</a>
+        <div class="dropdown">
+            <button class="dropbtn">Report <i class="fa fa-caret-down"></i></button>
+            <div class="dropdown-content">
+                <a href="report.html?tab=mlot">Mlot >1000 Search</a>
+                <a href="report.html?tab=bank">Bank Search</a>
+                <a href="map.html">CID Wise Map</a>
+            </div>
+        </div>
+        <a href="javascript:void(0)" class="logout-btn" onclick="handleLogout()"><i class="fa fa-sign-out"></i> Logout</a>
+    </div>
+
+    <h2>CID, Pincode & District Wise Live Map (Strict Pincode Boundary Lock)</h2>
+    
+    <div class="search-box" style="border-bottom: 2px dashed #ccc; padding-bottom: 15px; margin-bottom: 15px;">
+        <div style="display: flex; gap: 15px; align-items: center; flex-wrap: wrap;">
+            <div>
+                <label for="inputMapCID">CID: </label>
+                <input type="text" id="inputMapCID" placeholder="Type CID..." style="width: 130px;">
+                <button onclick="searchMapData()" style="background-color: #880505;">Search</button>
+            </div>
+            
+            <div style="border-left: 2px solid #ccc; padding-left: 15px;">
+                <label for="inputMapPincode">Pincode: </label>
+                <input type="text" id="inputMapPincode" placeholder="6 Digit..." style="width: 110px;">
+                <button onclick="searchPincodeData()" style="background-color: #2b579a;">Search Area</button>
+            </div>
+
+            <div style="border-left: 2px solid #ccc; padding-left: 15px;">
+                <label for="selectDistrict">District: </label>
+                <select id="selectDistrict" onchange="searchDistrictData()" style="width: 160px;">
+                    <option value="">Loading Districts...</option>
+                </select>
+            </div>
+
+            <div style="border-left: 2px solid #ccc; padding-left: 15px; background: #e2f0d9; padding: 6px 12px; border-radius: 4px;">
+                <label for="inputRadarKM">Nearby: </label>
+                <input type="number" id="inputRadarKM" value="50" style="width: 60px; padding: 5px;" min="1" max="200"> <b>KM</b>
+                <button onclick="searchNearbyRadarData()" style="background-color: #2e7d32;">Find CIDs 📡</button>
+            </div>
+            
+            <div>
+                <button onclick="searchAllMapData()" style="background-color: #7f8c8d;">Show All</button>
+            </div>
+        </div>
+    </div>
+    
+    <div id="mapLoading" style="display: none; color: blue; font-weight: bold; margin: 10px 0;">গুগল শিট থেকে ডেটা প্রসেস করা হচ্ছে... (<span id="loadProgress">0</span>)</div>
+    <div id="mapNoResult" style="display: none; color: red; font-weight: bold; margin: 10px 0;">উক্ত সার্চের কোনো অবস্থান বা আপনার আশেপাশে কোনো CID খুঁজে পাওয়া যায়নি!</div>
+    
+    <div id="map">
+        <button class="gps-btn" onclick="focusOnUserLocation()" title="Find My Live Location">🎯</button>
+    </div>
+
+    <script>
+        const CUSTOMER_SHEET_URL = "https://docs.google.com/spreadsheets/d/1kQRHPM7TYFhK9LTgkVmkZZukfV8C1ykLi1zm03-FivE/export?format=csv&gid=2053250837&_cb=" + new Date().getTime();
+
+        // 🎯 PINCODE GEOLOCATION DATABASE
+        const HIGH_PRECISION_PINS = {
+            "722101": { lat: 23.2356, lon: 87.0722 }, 
+            "722102": { lat: 23.2104, lon: 87.0425 }, 
+            "722121": { lat: 23.1365, lon: 87.1985 }, 
+            "722122": { lat: 23.0033, lon: 87.3193 }, 
+            "722133": { lat: 23.4147, lon: 87.1264 }, 
+            "722137": { lat: 23.3642, lon: 87.2791 }, 
+            "722138": { lat: 23.0805, lon: 87.4947 }, 
+            "722140": { lat: 22.8710, lon: 87.0682 }, 
+            "722141": { lat: 22.8465, lon: 86.8242 }, 
+            "722149": { lat: 22.9515, lon: 87.0864 }, 
+            "722150": { lat: 22.9566, lon: 87.2435 }, 
+            "722155": { lat: 23.1492, lon: 86.9140 }, 
+            "722160": { lat: 23.4839, lon: 86.9944 }, 
+            "722139": { lat: 23.1250, lon: 87.3512 }, 
+            "722152": { lat: 23.2201, lon: 86.8524 }, 
+            "722135": { lat: 23.5188, lon: 87.1729 }, 
+            "722143": { lat: 23.5784, lon: 87.1120 }, 
+            "722207": { lat: 23.0645, lon: 87.3245 }, 
+            "713101": { lat: 23.2425, lon: 87.8614 }
+        };
+
+        const DISTRICT_COORDS = {
+            "BANKURA": { lat: 23.2324, lon: 87.0785 },
+            "BARDHAMAN": { lat: 23.2324, lon: 87.8630 },
+            "PURBA BARDHAMAN": { lat: 23.2324, lon: 87.8630 },
+            "PASCHIM BARDHAMAN": { lat: 23.6850, lon: 86.9730 },
+            "BIRBHUM": { lat: 23.9110, lon: 87.5255 },
+            "HOOGHLY": { lat: 22.9031, lon: 88.3915 },
+            "HOWRAH": { lat: 22.5958, lon: 88.2636 },
+            "KOLKATA": { lat: 22.5726, lon: 88.3639 }
+        };
+
+        window.mymap = null;
+        let markerGroup = null;
+        let radarCircleLayer = null; 
+        let userLocationMarker = null; 
+        let userCoords = null; 
+
+        window.onload = function() {
+            initMap();
+            loadDistrictsDropdown();
+            startLiveTracking(); 
+        };
+
+        function initMap() {
+            try {
+                if (!window.mymap) {
+                    let normalMap = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { attribution: '© OpenStreetMap contributors', maxZoom: 19 });
+                    let plainSatellite = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', { attribution: 'Tiles © Esri', maxZoom: 19 });
+                    let googleHybrid = L.tileLayer('https://mt1.google.com/vt/lyrs=y&x={x}&y={y}&z={z}', { attribution: '© Google Maps', maxZoom: 22 });
+
+                    window.mymap = L.map('map', { center: [22.9868, 87.8550], zoom: 8, layers: [googleHybrid] });
+
+                    let baseMaps = {
+                        "Satellite with Shops/Roads 🛣️": googleHybrid,
+                        "Normal Road Map 🗺️": normalMap,
+                        "Plain Satellite 🛰️": plainSatellite
+                    };
+                    L.control.layers(baseMaps, null, { position: 'topright' }).addTo(window.mymap);
+                }
+                if (markerGroup) { markerGroup.clearLayers(); } 
+                else { markerGroup = L.layerGroup().addTo(window.mymap); }
+                clearRadarCircle();
+            } catch (e) { console.error(e); }
+        }
+
+        function clearRadarCircle() {
+            if (radarCircleLayer && window.mymap) {
+                window.mymap.removeLayer(radarCircleLayer);
+                radarCircleLayer = null;
+            }
+        }
+
+        function startLiveTracking() {
+            if (!navigator.geolocation) return;
+            navigator.geolocation.watchPosition(
+                (position) => {
+                    userCoords = [position.coords.latitude, position.coords.longitude];
+                    const bluePulseIcon = L.divIcon({ className: 'user-location-marker', iconSize: [14, 14], iconAnchor: [7, 7] });
+                    if (!userLocationMarker) {
+                        userLocationMarker = L.marker(userCoords, { icon: bluePulseIcon }).addTo(mymap);
+                        userLocationMarker.bindTooltip("<b>You are here 👤</b>", { permanent: false, direction: 'top' });
+                    } else {
+                        userLocationMarker.setLatLng(userCoords);
+                    }
+                },
+                (error) => { console.warn(error.message); },
+                { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
+            );
+        }
+
+        function focusOnUserLocation() {
+            if (userCoords && window.mymap) {
+                window.mymap.setView(userCoords, 16);
+                if (userLocationMarker) userLocationMarker.openTooltip();
+            } else {
+                alert("GPS Signal loading... Please wait!");
+            }
+        }
+
+        function calculateDistance(lat1, lon1, lat2, lon2) {
+            const R = 6371; 
+            const dLat = (lat2 - lat1) * Math.PI / 180;
+            const dLon = (lon2 - lon1) * Math.PI / 180;
+            const a = Math.sin(dLat/2) * Math.sin(dLat/2) +
+                      Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) * Math.sin(dLon/2) * Math.sin(dLon/2);
+            const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+            return parseFloat((R * c).toFixed(2));
+        }
+
+        function parseCSVLine(line) {
+            if (!line) return [];
+            try {
+                return line.split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/).map(item => item ? item.replace(/^"|"$/g, '').trim() : '');
+            } catch(e) {
+                return line.split(',').map(item => item ? item.trim() : '');
+            }
+        }
+
+        function loadDistrictsDropdown() {
+            fetch(CUSTOMER_SHEET_URL, { cache: "no-store" })
+                .then(res => res.text())
+                .then(csvText => {
+                    const lines = csvText.split(/\r?\n/).filter(line => line.trim() !== "");
+                    const headerCols = parseCSVLine(lines[0]);
+                    let jIdx = 9; 
+                    headerCols.forEach((col, index) => {
+                        if (col && (col.toUpperCase().includes("DISTRICT") || col.toUpperCase() === "DIST")) jIdx = index;
+                    });
+                    let districtsSet = new Set();
+                    for (let i = 1; i < lines.length; i++) {
+                        const cols = parseCSVLine(lines[i]);
+                        if (cols[jIdx]) districtsSet.add(cols[jIdx].trim().toUpperCase());
+                    }
+                    const dropdown = document.getElementById("selectDistrict");
+                    dropdown.innerHTML = '<option value="">-- Select District --</option>';
+                    Array.from(districtsSet).sort().forEach(dist => {
+                        let opt = document.createElement("option"); opt.value = dist; opt.textContent = dist; dropdown.appendChild(opt);
+                    });
+                });
+        }
+
+        function searchMapData() { const cid = document.getElementById("inputMapCID").value.trim(); if(cid) fetchAndPlotMap("CID", cid); }
+        function searchAllMapData() { fetchAndPlotMap("ALL", ""); }
+        function searchPincodeData() { const pin = document.getElementById("inputMapPincode").value.trim(); if(pin) fetchAndPlotMap("PINCODE", pin); }
+        function searchDistrictData() { const dist = document.getElementById("selectDistrict").value; if(dist) fetchAndPlotMap("DISTRICT", dist); }
+        function searchNearbyRadarData() { if (!userCoords) { alert("GPS coordinates not ready!"); return; } const kmRange = parseFloat(document.getElementById("inputRadarKM").value) || 50; fetchAndPlotMap("RADAR", kmRange); }
+
+        function getFallbackCoords(districtName, pincode) {
+            let pin = String(pincode).trim();
+            let dist = String(districtName).toUpperCase().trim();
+            if (HIGH_PRECISION_PINS[pin]) return { lat: HIGH_PRECISION_PINS[pin].lat, lon: HIGH_PRECISION_PINS[pin].lon, isPrecise: true };
+            if (DISTRICT_COORDS[dist]) return { lat: DISTRICT_COORDS[dist].lat, lon: DISTRICT_COORDS[dist].lon, isPrecise: false };
+            return { lat: 22.9868, lon: 87.8550, isPrecise: false };
+        }
+
+        // 🎲 Pseudo-Random determinist helper to create strict tight cluster spread
+        function strictScatter(index) {
+            let x = Math.sin(index) * 1000;
+            let y = Math.cos(index * 1.5) * 1000;
+            return {
+                latOffset: (x - Math.floor(x)) * 0.007 - 0.0035, // Strict Bounding box limit (-0.0035 to +0.0035 deg max)
+                lonOffset: (y - Math.floor(y)) * 0.007 - 0.0035
+            };
+        }
+
+        function fetchAndPlotMap(searchType, targetValue) {
+            const loading = document.getElementById("mapLoading");
+            const progressSpan = document.getElementById("loadProgress");
+            const noResult = document.getElementById("mapNoResult");
+            if(loading) { loading.style.display = "block"; progressSpan.textContent = "0"; }
+            if(noResult) noResult.style.display = "none";
+            
+            fetch(CUSTOMER_SHEET_URL, { cache: "no-store" })
+                .then(res => res.text())
+                .then(csvText => {
+                    const lines = csvText.split(/\r?\n/).filter(line => line.trim() !== "");
+                    const headerCols = parseCSVLine(lines[0]);
+                    
+                    let cIdx=1, dIdx=3, hIdx=7, jIdx=9, mIdx=12, nIdx=13, latIdx=24, lonIdx=25; 
+                    headerCols.forEach((col, idx) => {
+                        if (!col) return;
+                        let h = col.toUpperCase().trim();
+                        if (h === "CID" || h === "CUSTOMER ID") cIdx = idx;
+                        else if (h.includes("NAME") || h.includes("PROPRIETOR")) dIdx = idx;
+                        else if (h.includes("ADDRESS") || h === "VILLAGE") hIdx = idx;
+                        else if (h.includes("DISTRICT") || h === "DIST") jIdx = idx;
+                        else if (h.includes("PIN")) mIdx = idx;
+                        else if (h.includes("MOBILE")) nIdx = idx;
+                        else if (h === "LAT" || h === "LATITUDE") latIdx = idx;
+                        else if (h === "LON" || h === "LONGITUDE" || h === "LNG") lonIdx = idx;
+                    });
+                    
+                    initMap(); 
+
+                    if (searchType === "RADAR" && userCoords) {
+                        radarCircleLayer = L.circle(userCoords, { color: '#2e7d32', fillColor: '#a9dfbf', fillOpacity: 0.12, radius: targetValue * 1000 }).addTo(mymap);
+                    }
+
+                    let validCoords = [];
+                    let matchCount = 0;
+
+                    for (let i = 1; i < lines.length; i++) {
+                        const cols = parseCSVLine(lines[i]);
+                        if (cols.length === 0) continue;
+
+                        let cid = String(cols[cIdx]||'').trim();
+                        let name = String(cols[dIdx]||'').trim();
+                        let addr = String(cols[hIdx]||'').trim();
+                        let dist = String(cols[jIdx]||'').trim();
+                        let pin = String(cols[mIdx]||'').trim();
+                        let mob = String(cols[nIdx]||'').trim();
+                        
+                        let rawLat = cols[latIdx] ? String(cols[latIdx]).trim() : '';
+                        let rawLon = cols[lonIdx] ? String(cols[lonIdx]).trim() : '';
+
+                        let finalLat, finalLon;
+                        let locationType = "";
+
+                        if (rawLat !== "" && rawLon !== "" && rawLat !== "0" && rawLon !== "0" && !isNaN(rawLat) && !isNaN(rawLon)) {
+                            finalLat = parseFloat(rawLat);
+                            finalLon = parseFloat(rawLon);
+                            locationType = "✓ Precise Lat/Lon";
+                        } else {
+                            // 📮 শিটে ল্যাট/লন নেই -> নির্দিষ্ট পিনকোড লক ফালব্যাক
+                            let fb = getFallbackCoords(dist, pin);
+                            finalLat = fb.lat;
+                            finalLon = fb.lon;
+                            locationType = fb.isPrecise ? `📮 Lock to Pin: ${pin}` : "🏢 Located via District";
+
+                            // 🔒 STRICT BOUNDARY SCATTER: পিনকোড এরিয়ার ভেতরেই সুন্দরভাবে স্ক্যাটার হবে, বাইরে বের হবে না
+                            let offset = strictScatter(i + matchCount);
+                            finalLat += offset.latOffset;
+                            finalLon += offset.lonOffset;
+                        }
+
+                        let currentDistance = userCoords ? calculateDistance(userCoords[0], userCoords[1], finalLat, finalLon) : null;
+                        
+                        let isMatch = false;
+                        if (searchType === "ALL") isMatch = true;
+                        else if (searchType === "CID" && cid === targetValue) isMatch = true;
+                        else if (searchType === "PINCODE" && pin === targetValue) isMatch = true;
+                        else if (searchType === "DISTRICT" && dist.toUpperCase() === targetValue.toUpperCase()) isMatch = true;
+                        else if (searchType === "RADAR" && currentDistance !== null && currentDistance <= targetValue) isMatch = true;
+
+                        if (isMatch) {
+                            matchCount++;
+                            if (matchCount > 1000) continue; 
+
+                            let distanceStr = currentDistance !== null ? `<span style="color:#28a745; font-weight:bold;">${currentDistance} KM away</span>` : "GPS Pending";
+                            let marker = L.marker([finalLat, finalLon]).addTo(markerGroup);
+                            
+                            let googleNavUrl = `https://www.google.com/maps/dir/?api=1&destination=${finalLat},${finalLon}`;
+                            let streetViewUrl = `https://www.google.com/maps/@?api=1&map_action=pano&viewpoint=${finalLat},${finalLon}`;
+
+                            const tooltipHtml = `<div class="custom-tooltip"><div class="tooltip-title">CID: ${cid}</div>👤 ${name || "N/A"}</div>`;
+                            const popupHtml = `
+                                <div style="font-family: Arial, sans-serif; font-size:13px; line-height:1.6; min-width: 200px;">
+                                    <div style="color:#880505; font-weight:bold; font-size:15px; border-bottom: 1.5px dashed #ccc; padding-bottom:4px; margin-bottom:6px;">CID: ${cid}</div>
+                                    <b>👤 Name:</b> ${name || "N/A"}<br>
+                                    <b>📍 Address:</b> ${addr || "No Address"}<br>
+                                    <b>📞 Mobile:</b> ${mob || "N/A"}<br>
+                                    <div style="color: #1a73e8; font-size: 11px; font-weight: bold; margin-top: 2px;">ℹ️ Status: ${locationType}</div>
+                                    <div style="margin: 5px 0; border-top: 1px solid #eee; padding-top: 5px;">📍 ${distanceStr}</div>
+                                    <div class="action-btn-container">
+                                        <a href="${googleNavUrl}" target="_blank" class="direction-btn"><i class="fa fa-car"></i> Get Directions 🚗</a>
+                                        <a href="${streetViewUrl}" target="_blank" class="streetview-btn">Street View 🛣️</a>
+                                    </div>
+                                </div>`;
+
+                            marker.bindTooltip(tooltipHtml, { permanent: false, direction: 'top', className: 'custom-tooltip', opacity: 0.95 });
+                            marker.bindPopup(popupHtml);
+                            validCoords.push([finalLat, finalLon]);
+                        }
+                    }
+
+                    if (validCoords.length === 0) {
+                        if(loading) loading.style.display = "none";
+                        if(noResult) noResult.style.display = "block";
+                        return;
+                    }
+
+                    if(progressSpan) progressSpan.textContent = `${validCoords.length} CIDs Mapped!`;
+                    if(loading) setTimeout(() => { loading.style.display = "none"; }, 500);
+                    
+                    if (window.mymap) {
+                        if (searchType === "RADAR") {
+                            window.mymap.fitBounds(radarCircleLayer.getBounds(), { padding: [30, 30] });
+                        } else if (validCoords.length === 1) {
+                            window.mymap.setView(validCoords[0], 16);
+                        } else {
+                            window.mymap.fitBounds(L.latLngBounds(validCoords), { padding: [50, 50] });
+                        }
+                    }
+                })
+                .catch(err => { if(loading) loading.style.display = "none"; console.error(err); });
+        }
+        
+        function handleLogout() { alert("Logging out..."); window.location.href = "login.html"; }
+    </script>
+</body>
+</html>
