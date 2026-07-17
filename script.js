@@ -1,13 +1,24 @@
 // ====================================================
-// 🔑 ১. লগইন ইউজার লিস্ট এবং সেশন কন্ট্রোল
+// 🔑 ১. গুগল শিট থেকে ইউজার লোড এবং সেশন কন্ট্রোল
 // ====================================================
-const ALLOWED_USERS = {
-    "admin": "12345",      
-    "dilip": "cricket77",    
-    "sourav": "123456",
-    "subir": "123456",
-    "Achin": "achin12345"
-};
+
+// আপনার গুগল অ্যাপস স্ক্রিপ্ট থেকে পাওয়া Web App URL এখানে একবার বসিয়ে সেভ করুন
+const SHEET_URL = "https://script.google.com/macros/s/AKfycbyfPOLwn7gB26r-KdS8M9UzAcPpw9ajRTh30aedjEIOFuNX89L3LZO7aTOlAbnNiQmGtg/exec"; 
+let ALLOWED_USERS = {};
+
+// শিট থেকে ডেটা আনার জন্য এই ফাংশনটি স্বয়ংক্রিয় কাজ করবে
+async function fetchUsers() {
+    try {
+        const response = await fetch(SHEET_URL);
+        const data = await response.json();
+        ALLOWED_USERS = data;
+    } catch (err) {
+        console.error("User loading error");
+    }
+}
+
+// পেজ লোড হওয়ার সাথে সাথে ডেটা লোড শুরু হবে
+fetchUsers();
 
 (function checkSecurity() {
     const isLoggedIn = sessionStorage.getItem("isLoggedIn");
@@ -26,12 +37,16 @@ const ALLOWED_USERS = {
     }
 })();
 
-function handleLogin() {
+async function handleLogin() {
+    // লগইনের সময় লেটেস্ট ডেটা চেক করা
+    await fetchUsers();
+
     const uName = document.getElementById("username").value.trim();
     const pWord = document.getElementById("password").value.trim();
     const errorMsg = document.getElementById("login-error");
 
-    if (ALLOWED_USERS[uName] && ALLOWED_USERS[uName] === pWord) {
+    // শিটের ইউজার এবং পাসওয়ার্ড ভেরিফিকেশন
+    if (ALLOWED_USERS[uName] && String(ALLOWED_USERS[uName]) === String(pWord)) {
         if (errorMsg) errorMsg.style.display = "none";
         sessionStorage.setItem("isLoggedIn", "true");
         showDashboard();
@@ -42,7 +57,8 @@ function handleLogin() {
 
 function handleLogout() {
     sessionStorage.clear();
-    window.location.href = "index.html";
+    // এখানে login.html এর বদলে index.html দেওয়া হয়েছে যাতে লগআউট করলে মেইন পেজে ফিরে আসে
+    window.location.href = "index.html"; 
 }
 
 function showLoginScreen() {
@@ -56,26 +72,23 @@ function showDashboard() {
 }
 
 // ====================================================
-// 📊 ২. রিপোর্ট পেজের ট্যাব সুইচার ফাংশন (All tabs integrated)
+// 📊 ২. রিপোর্ট পেজের ট্যাব সুইচার ফাংশন
 // ====================================================
 function switchReportTab(tabName) {
     const mlotSec = document.getElementById("mlot-search-section");
     const bankSec = document.getElementById("bank-search-section");
     const mapSec = document.getElementById("map-search-section");
     
-    // প্রথমে সবকটি সেকশন লুকিয়ে ফেলা হচ্ছে
     if (mlotSec) mlotSec.style.display = "none";
     if (bankSec) bankSec.style.display = "none";
     if (mapSec) mapSec.style.display = "none";
 
-    // সিলেক্ট করা সেকশনটি ওপেন করা হচ্ছে
     if (tabName === 'mlot' && mlotSec) {
         mlotSec.style.display = "block";
     } else if (tabName === 'bank' && bankSec) {
         bankSec.style.display = "block";
     } else if (tabName === 'map' && mapSec) {
         mapSec.style.display = "block";
-        // ম্যাপ সঠিকভাবে লোড করার জন্য রিসাইজ ট্রিগার
         setTimeout(() => { 
             if(window.mymap) window.mymap.invalidateSize(); 
         }, 200);

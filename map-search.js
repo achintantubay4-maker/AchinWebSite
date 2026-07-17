@@ -8,7 +8,7 @@ let markerGroup = null;
 
 function initMap() {
     const mapDiv = document.getElementById("map");
-    mapDiv.style.display = "block";
+    if(mapDiv) mapDiv.style.display = "block";
     
     if (!window.mymap) {
         window.mymap = L.map('map').setView([22.9868, 87.8550], 7);
@@ -28,7 +28,7 @@ function parseCSVLine(line) {
 
 function searchMapData() {
     const cidInput = document.getElementById("inputMapCID").value.trim();
-    if (!cidInput) { alert("দয়া করে একটি নির্দিষ্ট CID নম্বর লিখুন অথবা 'Show All CIDs on Map' বাটনে চাপুন!"); return; }
+    if (!cidInput) { alert("দয়া করে একটি নির্দিষ্ট CID নম্বর লিখুন অথবা 'Show All CIDs on Map' বাটনে চাপুন!"); return; }
     fetchAndPlotMap(cidInput);
 }
 
@@ -40,8 +40,8 @@ function fetchAndPlotMap(targetCID) {
     const loading = document.getElementById("mapLoading");
     const noResult = document.getElementById("mapNoResult");
     
-    loading.style.display = "block";
-    noResult.style.display = "none";
+    if(loading) loading.style.display = "block";
+    if(noResult) noResult.style.display = "none";
     
     fetch(CUSTOMER_SHEET_URL, { cache: "no-store" })
         .then(res => res.text())
@@ -76,9 +76,7 @@ function fetchAndPlotMap(targetCID) {
                 let currentCID = String(cols[cIdx]).trim();
                 
                 if (targetCID === "ALL" || currentCID === targetCID) {
-                    // ১. প্রাইমারি অ্যাড্রেস (ডিটেইলড)
                     let primaryAddr = `${cols[hIdx] || ''}, ${cols[gIdx] || ''}, ${cols[jIdx] || ''}, West Bengal, ${cols[mIdx] || ''}`;
-                    // ২. ব্যাকআপ অ্যাড্রেস (যদি ফুল অ্যাড্রেস ম্যাপ চিনতে না পারে)
                     let backupAddr = `${cols[gIdx] || ''}, ${cols[jIdx] || ''}, West Bengal, ${cols[mIdx] || ''}`;
                     
                     matchRows.push({
@@ -93,14 +91,13 @@ function fetchAndPlotMap(targetCID) {
             }
 
             if (matchRows.length === 0) {
-                loading.style.display = "none";
-                noResult.style.display = "block";
+                if(loading) loading.style.display = "none";
+                if(noResult) noResult.style.display = "block";
                 return;
             }
 
             initMap();
             
-            // ম্যাপ লোকেশন খোঁজার মূল লুপ
             let promises = matchRows.map((row, index) => {
                 let geocodeUrl = `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(row.searchAddress)}&limit=1`;
                 
@@ -108,11 +105,9 @@ function fetchAndPlotMap(targetCID) {
                     .then(() => fetch(geocodeUrl, { headers: { 'User-Agent': 'CID-Map-App-v3' } }))
                     .then(r => r.json())
                     .then(geoResult => {
-                        // যদি প্রথমবার ফুল অ্যাড্রেস পেয়ে যায়
                         if (geoResult && geoResult.length > 0) {
                             return geoResult;
                         } else {
-                            // 🔄 ব্যাকআপ স্ট্র্যাটেজি: ফুল অ্যাড্রেস না পেলে শুধু City, District ও Pin Code দিয়ে খোঁজা হবে
                             let backupUrl = `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(row.backupAddress)}&limit=1`;
                             return fetch(backupUrl, { headers: { 'User-Agent': 'CID-Map-App-v3' } }).then(r => r.json());
                         }
@@ -123,7 +118,6 @@ function fetchAndPlotMap(targetCID) {
                             let lon = parseFloat(finalResult[0].lon);
                             
                             let marker = L.marker([lat, lon]).addTo(markerGroup);
-                            
                             marker.bindPopup(`
                                 <div style="font-family: Arial; font-size:13px; line-height:1.5; color:#333;">
                                     <b style="color:#880505; font-size:14px;">CID: ${row.cid}</b><br>
@@ -139,7 +133,7 @@ function fetchAndPlotMap(targetCID) {
             });
 
             Promise.all(promises).then(coords => {
-                loading.style.display = "none";
+                if(loading) loading.style.display = "none";
                 let validCoords = coords.filter(c => c !== null);
                 
                 if (validCoords.length > 0) {
@@ -151,14 +145,19 @@ function fetchAndPlotMap(targetCID) {
                         window.mymap.fitBounds(bounds, { padding: [50, 50] });
                     }
                 } else {
-                    // যদি ব্যাকআপ অ্যাড্রেসও ফেইল করে
-                    alert("দুঃখিত, এই ঠিকানার পিনকোড বা সিটি ম্যাপে খুঁজে পাওয়া যায়নি। দয়া করে স্প্রেডশিটের তথ্য চেক করুন!");
+                    alert("দুঃখিত, এই ঠিকানার পিনকোড বা সিটি ম্যাপে খুঁজে পাওয়া যায়নি।");
                 }
             });
         })
         .catch(err => {
-            loading.style.display = "none";
+            if(loading) loading.style.display = "none";
             console.error(err);
             alert("গুগল শিট কানেকশন এরর!");
         });
+}
+
+// লগআউট সমস্যা সমাধানের জন্য লিংক index.html এ পয়েন্ট করা হয়েছে
+function handleLogout() { 
+    sessionStorage.clear();
+    window.location.href = "index.html"; 
 }
