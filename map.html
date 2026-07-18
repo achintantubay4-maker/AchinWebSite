@@ -133,18 +133,19 @@
 </head>
 <body>
 
-    <div class="navbar">
-        <a href="index.html">Home</a>
-        <div class="dropdown">
-            <button class="dropbtn">Report <i class="fa fa-caret-down"></i></button>
-            <div class="dropdown-content">
-                <a href="report.html?section=mlot">Mlot >1000 Search</a>
-                <a href="report.html?section=bank">Bank Search</a>
-                <a href="map.html">CID Wise Map</a>
+        <div class="navbar">
+            <a href="index.html">Home</a>
+            <div class="dropdown">
+                <button class="dropbtn">Report <i class="fa fa-caret-down"></i></button>
+                <div class="dropdown-content">
+                    <a href="report.html?section=mlot">Mlot >1000 Search</a>
+                    <a href="report.html?section=bank">Bank Search</a>
+                    <a href="map.html">CID Wise Map</a>
+                    <a href="mlot_map.html">MLOT Map Search</a>
+                </div>
             </div>
+            <a href="javascript:void(0)" class="logout-btn" onclick="handleLogout()"><i class="fa fa-sign-out"></i> Logout</a>
         </div>
-        <a href="javascript:void(0)" class="logout-btn" onclick="handleLogout()"><i class="fa fa-sign-out"></i> Logout</a>
-    </div>
 
     <div class="search-box">
         <div class="search-box-item">
@@ -171,7 +172,7 @@
             <input type="number" id="inputRadarKM" value="50" min="1" max="200">
             <b style="font-size: 13px;">KM</b>
             <button onclick="searchNearbyRadarData()" style="background-color: #2e7d32;">Find CIDs 📡</button>
-        </div>
+            <span id="pinCount" style="font-weight:bold; color:#880505;"></span>
     </div>
     
     <div id="mapLoading" style="display: none; color: #1a73e8; font-weight: bold; margin: 10px 0; font-size: 14px;">Processing Google Sheets database... (<span id="loadProgress">0</span>)</div>

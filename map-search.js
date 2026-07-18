@@ -1,5 +1,5 @@
 // ====================================================
-// 🗺️ 8. CID WISE MAP SEARCH LOGIC (WITH SMART BACKUP SEARCH)
+// 🗺️ FINAL MERGED MAP SEARCH LOGIC (WITH COUNT FEATURE)
 // ====================================================
 const CUSTOMER_SHEET_URL = "https://docs.google.com/spreadsheets/d/1kQRHPM7TYFhK9LTgkVmkZZukfV8C1ykLi1zm03-FivE/export?format=csv&gid=2053250837&_cb=" + new Date().getTime();
 
@@ -28,7 +28,7 @@ function parseCSVLine(line) {
 
 function searchMapData() {
     const cidInput = document.getElementById("inputMapCID").value.trim();
-    if (!cidInput) { alert("দয়া করে একটি নির্দিষ্ট CID নম্বর লিখুন অথবা 'Show All CIDs on Map' বাটনে চাপুন!"); return; }
+    if (!cidInput) { alert("দয়া করে একটি নির্দিষ্ট CID নম্বর লিখুন!"); return; }
     fetchAndPlotMap(cidInput);
 }
 
@@ -39,9 +39,16 @@ function searchAllMapData() {
 function fetchAndPlotMap(targetCID) {
     const loading = document.getElementById("mapLoading");
     const noResult = document.getElementById("mapNoResult");
+    const countSpan = document.getElementById("pinCount");
     
     if(loading) loading.style.display = "block";
     if(noResult) noResult.style.display = "none";
+    
+    // কাউন্ট রিসেট
+    let currentCount = 0;
+    if(countSpan) countSpan.textContent = "Count: 0";
+    
+    initMap(); 
     
     fetch(CUSTOMER_SHEET_URL, { cache: "no-store" })
         .then(res => res.text())
@@ -50,42 +57,28 @@ function fetchAndPlotMap(targetCID) {
             if(lines.length <= 2) { throw new Error("No Data Found"); }
 
             const headers = parseCSVLine(lines[1]).map(h => h.toUpperCase().trim());
-            
-            const idxCID = headers.indexOf("CID");
-            const idxName = headers.indexOf("PROPREITOR NAME");
-            const idxCity = headers.indexOf("CITY");
-            const idxAddress = headers.indexOf("SHOPE ER FULL ADDRESS");
-            const idxDist = headers.indexOf("DISTRIC");
-            const idxPin = headers.indexOf("PIN CODE");
-            const idxContact = headers.indexOf("CONTACT 1");
-
-            const cIdx = idxCID !== -1 ? idxCID : 1;
-            const nIdx = idxName !== -1 ? idxName : 5;
-            const gIdx = idxCity !== -1 ? idxCity : 6;
-            const hIdx = idxAddress !== -1 ? idxAddress : 7;
-            const jIdx = idxDist !== -1 ? idxDist : 9;
-            const mIdx = idxPin !== -1 ? idxPin : 12;
-            const iconIdx = idxContact !== -1 ? idxContact : 13;
+            const cIdx = headers.indexOf("CID") !== -1 ? headers.indexOf("CID") : 1;
+            const nIdx = headers.indexOf("PROPREITOR NAME") !== -1 ? headers.indexOf("PROPREITOR NAME") : 5;
+            const gIdx = headers.indexOf("CITY") !== -1 ? headers.indexOf("CITY") : 6;
+            const hIdx = headers.indexOf("SHOPE ER FULL ADDRESS") !== -1 ? headers.indexOf("SHOPE ER FULL ADDRESS") : 7;
+            const jIdx = headers.indexOf("DISTRIC") !== -1 ? headers.indexOf("DISTRIC") : 9;
+            const mIdx = headers.indexOf("PIN CODE") !== -1 ? headers.indexOf("PIN CODE") : 12;
+            const iconIdx = headers.indexOf("CONTACT 1") !== -1 ? headers.indexOf("CONTACT 1") : 13;
 
             let matchRows = [];
-
             for (let i = 2; i < lines.length; i++) {
                 const cols = parseCSVLine(lines[i]);
                 if (cols.length < 3) continue;
-
                 let currentCID = String(cols[cIdx]).trim();
                 
                 if (targetCID === "ALL" || currentCID === targetCID) {
-                    let primaryAddr = `${cols[hIdx] || ''}, ${cols[gIdx] || ''}, ${cols[jIdx] || ''}, West Bengal, ${cols[mIdx] || ''}`;
-                    let backupAddr = `${cols[gIdx] || ''}, ${cols[jIdx] || ''}, West Bengal, ${cols[mIdx] || ''}`;
-                    
                     matchRows.push({
                         cid: currentCID,
                         name: cols[nIdx] || "Unknown",
                         shopAddress: cols[hIdx] || "No Address",
                         contact: cols[iconIdx] || "N/A",
-                        searchAddress: primaryAddr,
-                        backupAddress: backupAddr
+                        searchAddress: `${cols[hIdx] || ''}, ${cols[gIdx] || ''}, ${cols[jIdx] || ''}, West Bengal, ${cols[mIdx] || ''}`,
+                        backupAddress: `${cols[gIdx] || ''}, ${cols[jIdx] || ''}, West Bengal, ${cols[mIdx] || ''}`
                     });
                 }
             }
@@ -95,8 +88,6 @@ function fetchAndPlotMap(targetCID) {
                 if(noResult) noResult.style.display = "block";
                 return;
             }
-
-            initMap();
             
             let promises = matchRows.map((row, index) => {
                 let geocodeUrl = `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(row.searchAddress)}&limit=1`;
@@ -105,15 +96,16 @@ function fetchAndPlotMap(targetCID) {
                     .then(() => fetch(geocodeUrl, { headers: { 'User-Agent': 'CID-Map-App-v3' } }))
                     .then(r => r.json())
                     .then(geoResult => {
-                        if (geoResult && geoResult.length > 0) {
-                            return geoResult;
-                        } else {
-                            let backupUrl = `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(row.backupAddress)}&limit=1`;
-                            return fetch(backupUrl, { headers: { 'User-Agent': 'CID-Map-App-v3' } }).then(r => r.json());
-                        }
+                        if (geoResult && geoResult.length > 0) return geoResult;
+                        let backupUrl = `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(row.backupAddress)}&limit=1`;
+                        return fetch(backupUrl, { headers: { 'User-Agent': 'CID-Map-App-v3' } }).then(r => r.json());
                     })
                     .then(finalResult => {
                         if (finalResult && finalResult.length > 0) {
+                            // কাউন্ট বাড়ানো এবং আপডেট করা
+                            currentCount++;
+                            if(countSpan) countSpan.textContent = "Count: " + currentCount;
+                            
                             let lat = parseFloat(finalResult[0].lat);
                             let lon = parseFloat(finalResult[0].lon);
                             
@@ -135,17 +127,10 @@ function fetchAndPlotMap(targetCID) {
             Promise.all(promises).then(coords => {
                 if(loading) loading.style.display = "none";
                 let validCoords = coords.filter(c => c !== null);
-                
                 if (validCoords.length > 0) {
-                    if (validCoords.length === 1) {
-                        window.mymap.setView(validCoords[0], 14);
-                        markerGroup.eachLayer(layer => layer.openPopup());
-                    } else {
-                        let bounds = L.latLngBounds(validCoords);
-                        window.mymap.fitBounds(bounds, { padding: [50, 50] });
-                    }
+                    window.mymap.fitBounds(L.latLngBounds(validCoords), { padding: [50, 50] });
                 } else {
-                    alert("দুঃখিত, এই ঠিকানার পিনকোড বা সিটি ম্যাপে খুঁজে পাওয়া যায়নি।");
+                    alert("দুঃখিত, ম্যাপে এই ঠিকানার পিন পয়েন্ট খুঁজে পাওয়া যায়নি।");
                 }
             });
         })
@@ -156,8 +141,9 @@ function fetchAndPlotMap(targetCID) {
         });
 }
 
-// লগআউট সমস্যা সমাধানের জন্য লিংক index.html এ পয়েন্ট করা হয়েছে
 function handleLogout() { 
     sessionStorage.clear();
     window.location.href = "index.html"; 
 }
+
+window.onload = initMap;
