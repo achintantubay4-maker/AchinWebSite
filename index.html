@@ -1,146 +1,379 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Secure CID System - Home</title>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css"
+    />
     <style>
-        /* 🔒 LOGIN PAGE STYLES */
-        .login-body { display: flex; justify-content: center; align-items: center; min-height: 80vh; font-family: Arial, sans-serif; background-color: #f4f6f9; }
-        .login-card { background: #ffffff; padding: 35px 30px; border-radius: 10px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); width: 100%; max-width: 380px; text-align: center; }
-        .login-card h2 { margin-bottom: 25px; color: #333; font-size: 24px; }
-        .input-group { margin-bottom: 20px; text-align: left; }
-        .input-group label { display: block; margin-bottom: 6px; color: #666; font-weight: bold; font-size: 14px; }
-        .input-group input { width: 100%; padding: 10px 12px; border: 1px solid #ccc; border-radius: 5px; font-size: 16px; box-sizing: border-box; outline: none; }
-        .input-group input:focus { border-color: #009688; }
-        .login-btn { width: 100%; padding: 12px; background-color: #009688; color: white; border: none; border-radius: 5px; font-size: 16px; font-weight: bold; cursor: pointer; transition: 0.3s; }
-        .login-btn:hover { background-color: #00796b; }
-        .error-msg { color: #dc3545; margin-top: 15px; font-weight: bold; display: none; font-size: 14px; }
+      /* 🔒 LOGIN PAGE STYLES */
+      .login-body {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        min-height: 80vh;
+        font-family: Arial, sans-serif;
+        background-color: #f4f6f9;
+      }
+      .login-card {
+        background: #ffffff;
+        padding: 35px 30px;
+        border-radius: 10px;
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+        width: 100%;
+        max-width: 380px;
+        text-align: center;
+      }
+      .login-card h2 {
+        margin-bottom: 25px;
+        color: #333;
+        font-size: 24px;
+      }
+      .input-group {
+        margin-bottom: 20px;
+        text-align: left;
+      }
+      .input-group label {
+        display: block;
+        margin-bottom: 6px;
+        color: #666;
+        font-weight: bold;
+        font-size: 14px;
+      }
+      .input-group input {
+        width: 100%;
+        padding: 10px 12px;
+        border: 1px solid #ccc;
+        border-radius: 5px;
+        font-size: 16px;
+        box-sizing: border-box;
+        outline: none;
+      }
+      .input-group input:focus {
+        border-color: #009688;
+      }
+      .login-btn {
+        width: 100%;
+        padding: 12px;
+        background-color: #009688;
+        color: white;
+        border: none;
+        border-radius: 5px;
+        font-size: 16px;
+        font-weight: bold;
+        cursor: pointer;
+        transition: 0.3s;
+      }
+      .login-btn:hover {
+        background-color: #00796b;
+      }
+      .error-msg {
+        color: #dc3545;
+        margin-top: 15px;
+        font-weight: bold;
+        display: none;
+        font-size: 14px;
+      }
 
-        /* 🎨 DASHBOARD & GAME STYLES */
-        #main-dashboard { display: none; }
-        .navbar { overflow: hidden; background-color: #880505; font-family: Arial, sans-serif; border-radius: 4px; margin-bottom: 20px; box-shadow: 0 2px 5px rgba(0,0,0,0.2); }
-        .navbar a { float: left; font-size: 16px; color: white; text-align: center; padding: 14px 16px; text-decoration: none; transition: 0.3s; }
-        .navbar a.logout-btn { float: right; background-color: #dc3545; }
-        .navbar a.logout-btn:hover { background-color: #bd2130; }
-        .dropdown { float: left; overflow: hidden; }
-        .dropdown .dropbtn { font-size: 16px; border: none; outline: none; color: white; padding: 14px 16px; background-color: inherit; font-family: inherit; margin: 0; cursor: pointer; transition: 0.3s; }
-        .navbar a:hover, .dropdown:hover .dropbtn { background-color: #009688; }
-        .dropdown-content { display: none; position: absolute; background-color: #f9f9f9; min-width: 180px; box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.2); z-index: 999; border-radius: 0 0 4px 4px; }
-        .dropdown-content a { float: none; color: black; padding: 12px 16px; text-decoration: none; display: block; text-align: left; }
-        .dropdown-content a:hover { background-color: #ddd; color: black; }
-        .dropdown:hover .dropdown-content { display: block; }
+      /* 🎨 DASHBOARD & GAME STYLES */
+      #main-dashboard {
+        display: none;
+      }
+      .navbar {
+        overflow: hidden;
+        background-color: #880505;
+        font-family: Arial, sans-serif;
+        border-radius: 4px;
+        margin-bottom: 20px;
+        box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+      }
+      .navbar a {
+        float: left;
+        font-size: 16px;
+        color: white;
+        text-align: center;
+        padding: 14px 16px;
+        text-decoration: none;
+        transition: 0.3s;
+      }
+      .navbar a.logout-btn {
+        float: right;
+        background-color: #dc3545;
+      }
+      .navbar a.logout-btn:hover {
+        background-color: #bd2130;
+      }
+      .dropdown {
+        float: left;
+        overflow: hidden;
+      }
+      .dropdown .dropbtn {
+        font-size: 16px;
+        border: none;
+        outline: none;
+        color: white;
+        padding: 14px 16px;
+        background-color: inherit;
+        font-family: inherit;
+        margin: 0;
+        cursor: pointer;
+        transition: 0.3s;
+      }
+      .navbar a:hover,
+      .dropdown:hover .dropbtn {
+        background-color: #009688;
+      }
+      .dropdown-content {
+        display: none;
+        position: absolute;
+        background-color: #f9f9f9;
+        min-width: 180px;
+        box-shadow: 0px 8px 16px 0px rgba(0, 0, 0, 0.2);
+        z-index: 999;
+        border-radius: 0 0 4px 4px;
+      }
+      .dropdown-content a {
+        float: none;
+        color: black;
+        padding: 12px 16px;
+        text-decoration: none;
+        display: block;
+        text-align: left;
+      }
+      .dropdown-content a:hover {
+        background-color: #ddd;
+        color: black;
+      }
+      .dropdown:hover .dropdown-content {
+        display: block;
+      }
 
-        /* 🐍 SNAKE GAME STYLES */
-        .game-container { display: flex; flex-direction: column; align-items: center; justify-content: center; margin: 50px auto; font-family: Arial, sans-serif; background: #222; padding: 20px; border-radius: 12px; max-width: 440px; box-shadow: 0 10px 25px rgba(0,0,0,0.5); color: #fff; text-align: center; }
-        .game-title { font-size: 24px; color: #4CAF50; margin-bottom: 10px; font-weight: bold; text-shadow: 0 0 5px rgba(76, 175, 80, 0.5); }
-        .score-board { display: flex; justify-content: space-between; width: 100%; max-width: 400px; margin-bottom: 15px; font-size: 18px; font-weight: bold; }
-        #gameCanvas { background-color: #111; border: 4px solid #4CAF50; border-radius: 6px; box-shadow: inset 0 0 10px #000; }
-        .game-instructions { margin-top: 15px; font-size: 13px; color: #aaa; line-height: 1.4; }
-        .game-btn { margin-top: 15px; background-color: #4CAF50; color: white; border: none; padding: 8px 20px; font-size: 16px; font-weight: bold; border-radius: 4px; cursor: pointer; transition: 0.3s; }
-        .game-btn:hover { background-color: #45a049; }
+      /* 🐍 SNAKE GAME STYLES */
+      .game-container {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        margin: 50px auto;
+        font-family: Arial, sans-serif;
+        background: #222;
+        padding: 20px;
+        border-radius: 12px;
+        max-width: 440px;
+        box-shadow: 0 10px 25px rgba(0, 0, 0, 0.5);
+        color: #fff;
+        text-align: center;
+      }
+      .game-title {
+        font-size: 24px;
+        color: #4caf50;
+        margin-bottom: 10px;
+        font-weight: bold;
+        text-shadow: 0 0 5px rgba(76, 175, 80, 0.5);
+      }
+      .score-board {
+        display: flex;
+        justify-content: space-between;
+        width: 100%;
+        max-width: 400px;
+        margin-bottom: 15px;
+        font-size: 18px;
+        font-weight: bold;
+      }
+      #gameCanvas {
+        background-color: #111;
+        border: 4px solid #4caf50;
+        border-radius: 6px;
+        box-shadow: inset 0 0 10px #000;
+      }
+      .game-instructions {
+        margin-top: 15px;
+        font-size: 13px;
+        color: #aaa;
+        line-height: 1.4;
+      }
+      .game-btn {
+        margin-top: 15px;
+        background-color: #4caf50;
+        color: white;
+        border: none;
+        padding: 8px 20px;
+        font-size: 16px;
+        font-weight: bold;
+        border-radius: 4px;
+        cursor: pointer;
+        transition: 0.3s;
+      }
+      .game-btn:hover {
+        background-color: #45a049;
+      }
 
-        /* 📱 মোবাইলের অন-স্ক্রিন কন্ট্রোলার স্টাইল */
+      /* 📱 মোবাইলের অন-স্ক্রিন কন্ট্রোলার স্টাইল */
+      .mobile-controls {
+        display: none; /* কম্পিউটারে ডিফল্টভাবে এটি লুকানো থাকবে */
+        grid-template-areas:
+          ". up ."
+          "left . right"
+          ". down .";
+        gap: 10px;
+        margin-top: 15px;
+        width: 160px;
+      }
+      .ctrl-btn {
+        width: 50px;
+        height: 50px;
+        background-color: #444;
+        color: white;
+        border: 2px solid #555;
+        border-radius: 50%;
+        font-size: 20px;
+        font-weight: bold;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        user-select: none;
+        -webkit-user-select: none; /* মোবাইলে লং-প্রেস রিং বন্ধ করার জন্য */
+      }
+      .ctrl-btn:active {
+        background-color: #009688;
+        border-color: #4caf50;
+      }
+      #btn-up {
+        grid-area: up;
+        margin: 0 auto;
+      }
+      #btn-left {
+        grid-area: left;
+      }
+      #btn-right {
+        grid-area: right;
+      }
+      #btn-down {
+        grid-area: down;
+        margin: 0 auto;
+      }
+
+      /* মোবাইল ব্রাউজারের জন্য মিডিয়া কোয়েরি */
+      @media (max-width: 768px) {
         .mobile-controls {
-            display: none; /* কম্পিউটারে ডিফল্টভাবে এটি লুকানো থাকবে */
-            grid-template-areas: 
-                ". up ."
-                "left . right"
-                ". down .";
-            gap: 10px;
-            margin-top: 15px;
-            width: 160px;
-        }
-        .ctrl-btn {
-            width: 50px;
-            height: 50px;
-            background-color: #444;
-            color: white;
-            border: 2px solid #555;
-            border-radius: 50%;
-            font-size: 20px;
-            font-weight: bold;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            user-select: none;
-            -webkit-user-select: none; /* মোবাইলে লং-প্রেস রিং বন্ধ করার জন্য */
-        }
-        .ctrl-btn:active { background-color: #009688; border-color: #4CAF50; }
-        #btn-up { grid-area: up; margin: 0 auto; }
-        #btn-left { grid-area: left; }
-        #btn-right { grid-area: right; }
-        #btn-down { grid-area: down; margin: 0 auto; }
-
-        /* মোবাইল ব্রাউজারের জন্য মিডিয়া কোয়েরি */
-        @media (max-width: 768px) {
-            .mobile-controls { display: grid; } /* মোবাইলে কন্ট্রোলার দেখাবে */
-            #gameCanvas { width: 90vw; height: 90vw; max-width: 360px; max-height: 360px; } /* রেস্পনসিভ বোর্ড */
-        }
+          display: grid;
+        } /* মোবাইলে কন্ট্রোলার দেখাবে */
+        #gameCanvas {
+          width: 90vw;
+          height: 90vw;
+          max-width: 360px;
+          max-height: 360px;
+        } /* রেস্পনসিভ বোর্ড */
+      }
     </style>
-</head>
-<body>
-
+  </head>
+  <body>
     <div id="login-screen" class="login-body">
-        <div class="login-card">
-            <h2>System Login</h2>
-            <div class="input-group">
-                <label for="username">User ID</label>
-                <input type="text" id="username" placeholder="Enter User ID">
-            </div>
-            <div class="input-group">
-                <label for="password">Password</label>
-                <input type="password" id="password" placeholder="Enter Password">
-            </div>
-            <button class="login-btn" onclick="handleLogin()">Login</button>
-            <div id="login-error" class="error-msg"> Invalid User ID or Password! </div>
+      <div class="login-card">
+        <h2>System Login</h2>
+        <div class="input-group">
+          <label for="username">User ID</label>
+          <input type="text" id="username" placeholder="Enter User ID" />
         </div>
+        <div class="input-group">
+          <label for="password">Password</label>
+          <input type="password" id="password" placeholder="Enter Password" />
+        </div>
+        <button class="login-btn" onclick="handleLogin()">Login</button>
+        <div id="login-error" class="error-msg">
+          Invalid User ID or Password!
+        </div>
+      </div>
     </div>
 
     <div id="main-dashboard">
-        <!-- 🛠️ FIXED NAVBAR FOR HOME -->
-        <div class="navbar">
-            <a href="index.html">Home</a>
-            <div class="dropdown">
-                <button class="dropbtn">Report <i class="fa fa-caret-down"></i></button>
-                <div class="dropdown-content">
-                    <a href="report.html?section=mlot">Mlot >1000 Search</a>
-                    <a href="report.html?section=bank">Bank Search</a>
-                    <a href="map.html">CID Wise Map</a> <!-- 
-                    <a href="mlot_map.html">MLOT Map Search</a>
-                </div>
-            </div>
-            <a href="javascript:void(0)" class="logout-btn" onclick="handleLogout()"><i class="fa fa-sign-out"></i> Logout</a>
+      <!-- 🛠️ FIXED NAVBAR FOR HOME -->
+      <div class="navbar">
+        <a href="index.html">Home</a>
+        <div class="dropdown">
+          <button class="dropbtn">
+            Report <i class="fa fa-caret-down"></i>
+          </button>
+          <div class="dropdown-content">
+            <a href="report.html?section=mlot">Mlot >1000 Search</a>
+            <a href="report.html?section=bank">Bank Search</a>
+            <a href="map.html">CID Wise Map</a>
+            <!-- ✅ ড্রপডাউনে ম্যাপ অপশনটি ফিক্স করা হলো -->
+            <a href="mlot_map.html">MLOT Map Search</a>
+          </div>
+        </div>
+        <a href="javascript:void(0)" class="logout-btn" onclick="handleLogout()"
+          ><i class="fa fa-sign-out"></i> Logout</a
+        >
+      </div>
+
+      <div id="snake-game-section" class="game-container">
+        <div class="game-title">🐍 Retro Snake Game</div>
+        <div class="score-board">
+          <span
+            >Score:
+            <span id="currentScore" style="color: #4caf50">0</span></span
+          >
+          <span
+            >High Score:
+            <span id="highScore" style="color: #ff9800">0</span></span
+          >
         </div>
 
-        <div id="snake-game-section" class="game-container">
-            <div class="game-title">🐍 Retro Snake Game</div>
-            <div class="score-board">
-                <span>Score: <span id="currentScore" style="color: #4CAF50;">0</span></span>
-                <span>High Score: <span id="highScore" style="color: #ff9800;">0</span></span>
-            </div>
-            
-            <canvas id="gameCanvas" width="400" height="400"></canvas>
-            
-            <!-- 📱 অন-স্ক্রিন টাচ কন্ট্রোল (শুধুমাত্র মোবাইলে ভিজিবল হবে) -->
-            <div class="mobile-controls">
-                <button id="btn-up" class="ctrl-btn" onclick="setMobileDirection('UP')">▲</button>
-                <button id="btn-left" class="ctrl-btn" onclick="setMobileDirection('LEFT')">◀</button>
-                <button id="btn-right" class="ctrl-btn" onclick="setMobileDirection('RIGHT')">▶</button>
-                <button id="btn-down" class="ctrl-btn" onclick="setMobileDirection('DOWN')">▼</button>
-            </div>
+        <canvas id="gameCanvas" width="400" height="400"></canvas>
 
-            <button id="startResetBtn" class="game-btn" onclick="toggleGame()" style="margin-top:20px;">Start Game</button>
-            <div class="game-instructions">
-                ⌨️ Control using keyboard or touch buttons
-            </div>
+        <!-- 📱 অন-স্ক্রিন টাচ কন্ট্রোল (শুধুমাত্র মোবাইলে ভিজিবল হবে) -->
+        <div class="mobile-controls">
+          <button
+            id="btn-up"
+            class="ctrl-btn"
+            onclick="setMobileDirection('UP')"
+          >
+            ▲
+          </button>
+          <button
+            id="btn-left"
+            class="ctrl-btn"
+            onclick="setMobileDirection('LEFT')"
+          >
+            ◀
+          </button>
+          <button
+            id="btn-right"
+            class="ctrl-btn"
+            onclick="setMobileDirection('RIGHT')"
+          >
+            ▶
+          </button>
+          <button
+            id="btn-down"
+            class="ctrl-btn"
+            onclick="setMobileDirection('DOWN')"
+          >
+            ▼
+          </button>
         </div>
+
+        <button
+          id="startResetBtn"
+          class="game-btn"
+          onclick="toggleGame()"
+          style="margin-top: 20px"
+        >
+          Start Game
+        </button>
+        <div class="game-instructions">
+          ⌨️ Control using keyboard or touch buttons
+        </div>
+      </div>
     </div>
 
     <!-- স্ক্রিপ্ট লোডিং -->
     <script src="script.js"></script>
     <script src="snake-game.js"></script>
-</body>
+  </body>
 </html>
