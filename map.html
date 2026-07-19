@@ -368,7 +368,8 @@
                     const lines = csvText.split(/\r?\n/).filter(line => line.trim() !== "");
                     const headerCols = parseCSVLine(lines[0]);
                     
-                    let cIdx=1, dIdx=3, hIdx=7, jIdx=9, mIdx=12, nIdx=13, latIdx=24, lonIdx=25; 
+                    // এখানে stRtIdx=2 যোগ করা হয়েছে (এটিই মূল সমাধান)
+                    let cIdx=1, dIdx=3, hIdx=7, jIdx=9, mIdx=12, nIdx=13, latIdx=24, lonIdx=25, stRtIdx=2; 
                     headerCols.forEach((col, idx) => {
                         if (!col) return;
                         let h = col.toUpperCase().trim();
@@ -378,6 +379,7 @@
                         else if (h.includes("DISTRICT") || h === "DIST") jIdx = idx;
                         else if (h.includes("PIN")) mIdx = idx;
                         else if (h.includes("MOBILE")) nIdx = idx;
+                        else if (h.includes("ST/RT")) stRtIdx = idx; // এই লাইনটি যোগ করা হয়েছে
                         else if (h === "LAT" || h === "LATITUDE") latIdx = idx;
                         else if (h === "LON" || h === "LONGITUDE" || h === "LNG") lonIdx = idx;
                     });
@@ -401,6 +403,8 @@
                         let dist = String(cols[jIdx]||'').trim();
                         let pin = String(cols[mIdx]||'').trim();
                         let mob = String(cols[nIdx]||'').trim();
+
+                        let strt = cols[stRtIdx] ? String(cols[stRtIdx]).trim() : "N/A";
                         
                         let rawLat = cols[latIdx] ? String(cols[latIdx]).trim() : '';
                         let rawLon = cols[lonIdx] ? String(cols[lonIdx]).trim() : '';
@@ -431,35 +435,53 @@
                         else if (searchType === "DISTRICT" && dist.toUpperCase() === targetValue.toUpperCase()) isMatch = true;
                         else if (searchType === "RADAR" && currentDistance !== null && currentDistance <= targetValue) isMatch = true;
 
-                        if (isMatch) {
-                            matchCount++;
-                            if (matchCount > 1000) continue; 
+                 if (isMatch) {
+                   matchCount++;
+                     if (matchCount > 1000) continue; 
 
-                            let distanceStr = currentDistance !== null ? `<span style="color:#28a745; font-weight:bold;">${currentDistance} KM away</span>` : "GPS Pending";
-                            let marker = L.marker([finalLat, finalLon]).addTo(markerGroup);
-                            
-                            let googleNavUrl = `https://www.google.com/maps/dir/?api=1&destination=${finalLat},${finalLon}`;
-                            let streetViewUrl = `https://www.google.com/maps/@?api=1&map_action=pano&viewpoint=${finalLat},${finalLon}`;
+                          // ১. কালার লজিক (ST থাকলে লাল, নাহলে নীল)
+                          // আমরা লিফলেটের নিজস্ব লাল এবং নীল মার্কার ইমেজ ব্যবহার করছি
+                        let iconUrl = (strt && strt.toUpperCase().includes("ST")) 
+                        ? "https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-red.png" 
+                         : "https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-blue.png";
 
-                            const tooltipHtml = `<div class="custom-tooltip"><div class="tooltip-title">CID: ${cid}</div>👤 ${name || "N/A"}</div>`;
-                            const popupHtml = `
-                                <div style="font-family: Arial, sans-serif; font-size:13px; line-height:1.6; min-width: 190px;">
-                                    <div style="color:#880505; font-weight:bold; font-size:15px; border-bottom: 1.5px dashed #ccc; padding-bottom:4px; margin-bottom:6px;">CID: ${cid}</div>
-                                    <b>👤 Name:</b> ${name || "N/A"}<br>
-                                    <b>📍 Address:</b> ${addr || "No Address"}<br>
-                                    <b>📞 Mobile:</b> ${mob ? `<a href="tel:${mob}" style="color:#007bff; text-decoration:none;">${mob}</a>` : "N/A"}<br>
-                                    <div style="color: #1a73e8; font-size: 11px; font-weight: bold; margin-top: 2px;">ℹ️ Status: ${locationType}</div>
-                                    <div style="margin: 5px 0; border-top: 1px solid #eee; padding-top: 5px;">📍 ${distanceStr}</div>
-                                    <div class="action-btn-container">
-                                        <a href="${googleNavUrl}" target="_blank" class="direction-btn"><i class="fa fa-car"></i> Directions</a>
-                                        <a href="${streetViewUrl}" target="_blank" class="streetview-btn">Street View</a>
-                                    </div>
-                                </div>`;
+                        let shadowUrl = "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-shadow.png";
 
-                            marker.bindTooltip(tooltipHtml, { permanent: false, direction: 'top', className: 'custom-tooltip', opacity: 0.95 });
-                            marker.bindPopup(popupHtml);
-                            validCoords.push([finalLat, finalLon]);
-                        }
+                         let customIcon = new L.Icon({
+                         iconUrl: iconUrl,
+                          shadowUrl: shadowUrl,
+                         iconSize: [25, 41],
+                         iconAnchor: [12, 41],
+                        popupAnchor: [1, -34],
+                        shadowSize: [41, 41]
+    });
+
+    let marker = L.marker([finalLat, finalLon], { icon: customIcon }).addTo(markerGroup);
+    
+    let distanceStr = currentDistance !== null ? `<span style="color:#28a745; font-weight:bold;">${currentDistance} KM away</span>` : "GPS Pending";
+    let googleNavUrl = `https://www.google.com/maps/dir/?api=1&destination=${finalLat},${finalLon}`;
+    let streetViewUrl = `https://www.google.com/maps/@?api=1&map_action=pano&viewpoint=${finalLat},${finalLon}`;
+
+    const tooltipHtml = `<div class="custom-tooltip"><div class="tooltip-title">CID: ${cid}</div>👤 ${name || "N/A"}</div>`;
+    const popupHtml = `
+        <div style="font-family: Arial, sans-serif; font-size:13px; line-height:1.6; min-width: 190px;">
+            <div style="color:#880505; font-weight:bold; font-size:15px; border-bottom: 1.5px dashed #ccc; padding-bottom:4px; margin-bottom:6px;">CID: ${cid}</div>
+            <b>👤 Name:</b> ${name || "N/A"}<br>
+            <b>🖥️ DB:</b> ${strt || "N/A"}<br>
+            <b>📍 Address:</b> ${addr || "No Address"}<br>
+            <b>📱 Mobile:</b> ${mob ? `<a href="tel:${mob}" style="color:#007bff; text-decoration:none;">${mob}</a>` : "N/A"}<br>
+            <div style="color: #1a73e8; font-size: 11px; font-weight: bold; margin-top: 2px;">ℹ️ Status: ${locationType}</div>
+            <div style="margin: 5px 0; border-top: 1px solid #eee; padding-top: 5px;">📍 ${distanceStr}</div>
+            <div class="action-btn-container">
+                <a href="${googleNavUrl}" target="_blank" class="direction-btn"><i class="fa fa-car"></i> Directions</a>
+                <a href="${streetViewUrl}" target="_blank" class="streetview-btn">Street View</a>
+            </div>
+        </div>`;
+
+    marker.bindTooltip(tooltipHtml, { permanent: false, direction: 'top', className: 'custom-tooltip', opacity: 0.95 });
+    marker.bindPopup(popupHtml);
+    validCoords.push([finalLat, finalLon]);
+}
                     }
 
                     if (validCoords.length === 0) {
@@ -488,7 +510,7 @@
         function handleLogout() { 
     alert("Logging out..."); 
     sessionStorage.clear(); // সেশন থেকে লগইন তথ্য মুছে ফেলা
-    window.location.href = "index.html"; // এটি আপনাকে লগইন স্ক্রিনসহ হোমপেজে নিয়ে যাবে
+    window.location.href = "index.html"; // এটি আপনাকে লগইন স্ক্রিনসহ হোমপেজে নিয়ে যাবে
 }
     </script>
 </body>

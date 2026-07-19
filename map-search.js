@@ -1,5 +1,5 @@
 // ====================================================
-// 🗺️ FINAL MERGED MAP SEARCH LOGIC (WITH COUNT FEATURE)
+// 🗺️ FINAL MERGED MAP SEARCH LOGIC (FIXED COLOR LOGIC)
 // ====================================================
 const CUSTOMER_SHEET_URL = "https://docs.google.com/spreadsheets/d/1kQRHPM7TYFhK9LTgkVmkZZukfV8C1ykLi1zm03-FivE/export?format=csv&gid=2053250837&_cb=" + new Date().getTime();
 
@@ -44,7 +44,6 @@ function fetchAndPlotMap(targetCID) {
     if(loading) loading.style.display = "block";
     if(noResult) noResult.style.display = "none";
     
-    // কাউন্ট রিসেট
     let currentCount = 0;
     if(countSpan) countSpan.textContent = "Count: 0";
     
@@ -57,8 +56,10 @@ function fetchAndPlotMap(targetCID) {
             if(lines.length <= 2) { throw new Error("No Data Found"); }
 
             const headers = parseCSVLine(lines[1]).map(h => h.toUpperCase().trim());
+            
             const cIdx = headers.indexOf("CID") !== -1 ? headers.indexOf("CID") : 1;
             const nIdx = headers.indexOf("PROPREITOR NAME") !== -1 ? headers.indexOf("PROPREITOR NAME") : 5;
+            const stRtIdx = headers.indexOf("ST/RT") !== -1 ? headers.indexOf("ST/RT") : 2;
             const gIdx = headers.indexOf("CITY") !== -1 ? headers.indexOf("CITY") : 6;
             const hIdx = headers.indexOf("SHOPE ER FULL ADDRESS") !== -1 ? headers.indexOf("SHOPE ER FULL ADDRESS") : 7;
             const jIdx = headers.indexOf("DISTRIC") !== -1 ? headers.indexOf("DISTRIC") : 9;
@@ -75,6 +76,7 @@ function fetchAndPlotMap(targetCID) {
                     matchRows.push({
                         cid: currentCID,
                         name: cols[nIdx] || "Unknown",
+                        stRt: cols[stRtIdx] || "N/A",
                         shopAddress: cols[hIdx] || "No Address",
                         contact: cols[iconIdx] || "N/A",
                         searchAddress: `${cols[hIdx] || ''}, ${cols[gIdx] || ''}, ${cols[jIdx] || ''}, West Bengal, ${cols[mIdx] || ''}`,
@@ -102,18 +104,29 @@ function fetchAndPlotMap(targetCID) {
                     })
                     .then(finalResult => {
                         if (finalResult && finalResult.length > 0) {
-                            // কাউন্ট বাড়ানো এবং আপডেট করা
                             currentCount++;
                             if(countSpan) countSpan.textContent = "Count: " + currentCount;
                             
                             let lat = parseFloat(finalResult[0].lat);
                             let lon = parseFloat(finalResult[0].lon);
                             
-                            let marker = L.marker([lat, lon]).addTo(markerGroup);
+                            // নতুন কালার লজিক (ST থাকলে লাল, অন্যথায় নীল)
+                            let markerColor = (row.stRt && row.stRt.toUpperCase().includes("ST")) ? "#ff0000" : "#3388ff";
+                            
+                            let marker = L.circleMarker([lat, lon], {
+                                radius: 8,
+                                fillColor: markerColor,
+                                color: "#fff",
+                                weight: 2,
+                                opacity: 1,
+                                fillOpacity: 0.8
+                            }).addTo(markerGroup);
+                            
                             marker.bindPopup(`
                                 <div style="font-family: Arial; font-size:13px; line-height:1.5; color:#333;">
                                     <b style="color:#880505; font-size:14px;">CID: ${row.cid}</b><br>
                                     <b>Owner:</b> ${row.name}<br>
+                                    <b>ST/RT:</b> ${row.stRt || "N/A"}<br>
                                     <b>Shop Address:</b> ${row.shopAddress}<br>
                                     <b>Contact:</b> ${row.contact}
                                 </div>
@@ -130,7 +143,7 @@ function fetchAndPlotMap(targetCID) {
                 if (validCoords.length > 0) {
                     window.mymap.fitBounds(L.latLngBounds(validCoords), { padding: [50, 50] });
                 } else {
-                    alert("দুঃখিত, ম্যাপে এই ঠিকানার পিন পয়েন্ট খুঁজে পাওয়া যায়নি।");
+                    alert("দুঃখিত, ম্যাপে এই ঠিকানার পিন পয়েন্ট খুঁজে পাওয়া যায়নি।");
                 }
             });
         })
